@@ -1,0 +1,18 @@
+{
+  "name": "hsk-trainer-tools",
+  "private": true,
+  "type": "module",
+  "description": "Build tools for the example sentences and fonts of Прописи HSK",
+  "scripts": {
+    "download": "node download.mjs",
+    "select": "node --max-old-space-size=4096 select.mjs",
+    "build": "node build.mjs",
+    "show": "node show.mjs",
+    "fonts": "node build-fonts.mjs",
+    "font-gap": "node font-gap.mjs"
+  },
+  "dependencies": {
+    "pinyin-pro": "3.29.4",
+    "seek-bzip": "2.0.0"
+  }
+}

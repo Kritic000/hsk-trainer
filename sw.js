@@ -4,7 +4,7 @@
 //         or all at once via the «Скачать всё для офлайна» button.
 // After changing index.html/lib/fonts, bump SHELL_VERSION so clients pick up new files.
 // DATA_VERSION only needs a bump when data/*.json change.
-const SHELL_VERSION = 1;
+const SHELL_VERSION = 2;
 const DATA_VERSION = 1;
 const SHELL = `propisi-shell-v${SHELL_VERSION}`;
 const DATA = `propisi-data-v${DATA_VERSION}`;
@@ -27,6 +27,7 @@ const SHELL_FILES = [
   "fonts/noto-serif-sc-05.woff2",
   "fonts/noto-serif-sc-06.woff2",
   "fonts/noto-serif-sc-07.woff2",
+  "fonts/noto-serif-sc-08.woff2",
   "icons/icon-192.png",
   "icons/icon-512.png",
   "icons/icon-maskable-512.png",

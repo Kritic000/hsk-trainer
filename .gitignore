@@ -1,0 +1,4 @@
+tools/node_modules/
+tools/.cache/
+# local only: contains lines from the HSK Standard Course textbook
+tools/sentences/exclude.txt
