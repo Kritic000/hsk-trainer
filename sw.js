@@ -7,7 +7,7 @@
 // After changing index.html/lib/fonts, bump SHELL_VERSION so clients pick up new files.
 // DATA_VERSION — when strokes/audio change; SENT_VERSION — when sentences change
 // (each together with the same number in DATA_CACHE / SENT_CACHE in index.html).
-const SHELL_VERSION = 3;
+const SHELL_VERSION = 4;
 const DATA_VERSION = 1;
 const SENT_VERSION = 1;
 const SHELL = `propisi-shell-v${SHELL_VERSION}`;

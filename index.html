@@ -109,6 +109,30 @@ button:focus-visible,select:focus-visible{outline:2px solid var(--cinnabar);outl
 .py{font-size:1.7rem;font-weight:600;color:var(--cinnabar)}
 .speak{display:inline-grid;place-items:center;width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:var(--sheet);color:var(--cinnabar);cursor:pointer;flex:none}
 .speak.sm{width:30px;height:30px}
+.speak.mic.on,.qmic.on{background:var(--cinnabar);color:var(--sheet);border-color:var(--cinnabar)}
+.search.has-mic #q{padding-right:48px}
+.qmic{position:absolute;right:6px;top:6px;width:34px;height:34px;display:grid;place-items:center;border:0;border-radius:50%;background:none;color:var(--cinnabar);cursor:pointer}
+.qmic svg,.speak.mic svg{width:18px;height:18px}
+.speak.sm.mic svg{width:15px;height:15px}
+.qmsg{margin:6px 2px 0;font-size:.85rem;color:var(--muted)}
+.qmsg.bad{color:var(--cinnabar)}
+.voice{border:1px solid var(--line);border-radius:12px;padding:12px;display:grid;gap:8px;background:var(--paper)}
+.vhead{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.vhead .sub{margin:0}
+.voice p{margin:0}
+.vstatus{font-size:.95rem}
+.vstatus.bad{color:var(--cinnabar)}
+.vheard{font-size:.95rem}
+.vheard .ok{color:var(--ok);font-weight:600}
+.vheard .no{color:var(--cinnabar);font-weight:600}
+.vchart{display:flex;flex-wrap:wrap;gap:10px}
+.vchart figure{margin:0;display:grid;gap:2px;justify-items:center;font-size:.78rem;color:var(--muted);text-align:center}
+.vchart svg{width:84px;height:68px;border:1px solid var(--line);border-radius:6px;background:var(--sheet)}
+.vchart .grid{stroke:var(--line);stroke-width:1}
+.vchart .ref{fill:none;stroke:var(--muted);stroke-width:2.5;stroke-dasharray:5 4;stroke-linecap:round}
+.vchart .you{fill:none;stroke:var(--cinnabar);stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.vchart b{color:var(--ink);font-size:.9rem}
+.vnote{font-size:.78rem;color:var(--muted)}
 .speak svg{width:18px;height:18px}
 .speak.sm svg{width:15px;height:15px}
 .speak.playing{background:var(--cinnabar-soft)}
@@ -199,6 +223,7 @@ path.old{fill:var(--ghost)} path.new{fill:var(--cinnabar)} path.all{fill:var(--s
   <div class="search">
     <label for="q" class="sr">Поиск иероглифа</label>
     <input id="q" type="search" autocomplete="off" spellcheck="false" placeholder="Поиск по всем уровням: 好, hao, hǎo3, мама, 汉语">
+    <button class="qmic" id="qmic" type="button" aria-label="Голосовой поиск по-китайски" title="Голосовой поиск по-китайски" hidden></button>
     <div class="results" id="results" hidden></div>
   </div>
 
@@ -247,10 +272,20 @@ path.old{fill:var(--ghost)} path.new{fill:var(--cinnabar)} path.all{fill:var(--s
           <div class="head">
             <div class="big" id="i-char"></div>
             <div>
-              <div class="pyline"><span class="py" id="i-py"></span><button class="speak" id="say" aria-label="Послушать знак"></button></div>
+              <div class="pyline"><span class="py" id="i-py"></span><button class="speak" id="say" aria-label="Послушать знак"></button><button class="speak mic" id="sayme" aria-label="Скажи вслух" title="Скажи вслух" hidden></button></div>
               <div class="mean" id="i-mean"></div>
             </div>
           </div>
+          <section class="voice" id="voice" hidden aria-live="polite">
+            <div class="vhead">
+              <h2 class="sub">Скажи вслух</h2>
+              <button class="chip" id="vstop" type="button">Готово</button>
+            </div>
+            <p class="vstatus" id="vstatus"></p>
+            <p class="vheard" id="vheard" hidden></p>
+            <div class="vchart" id="vchart"></div>
+            <p class="vnote">Распознавание сверяет слово целиком и может «простить» неверный тон, если слово угадывается. Сам тон показывает график: сравни свою линию с пунктиром. Высота голоса считается на устройстве и никуда не отправляется; распознавание речи делает сервис браузера (в Chrome — Google), для него звук уходит в интернет.</p>
+          </section>
           <dl>
             <dt id="t-lesson" hidden>В уроке</dt><dd id="i-lesson" hidden></dd>
             <dt id="t-word">Слово</dt><dd id="i-word"></dd>
@@ -471,8 +506,12 @@ function renderInfo(){
   show("hint", !!it.hint); $("i-hint").innerHTML = it.hint ? hanify(it.hint) : "";
   // word block: characters, pinyin, translation, listen button
   const wordBlock = (w, wp, wm, id) => `<span class="han" style="font-size:1.1em">${esc(w)}</span>` + (wp ? `<span class="wp">${esc(wp)}</span>` : "")
-    + (wm ? `<span class="wm">${esc(wm)}</span>` : "") + (w.length > 1 || w !== c ? `<button class="speak sm" id="${id}" aria-label="Послушать слово">${ICON}</button>` : "");
+    + (wm ? `<span class="wm">${esc(wm)}</span>` : "") + (w.length > 1 || w !== c ? `<button class="speak sm" id="${id}" aria-label="Послушать слово">${ICON}</button>` : "")
+    + (MIC_OK && wp && (w.length > 1 || w !== c) ? `<button class="speak sm mic" id="${id}m" aria-label="Скажи слово вслух" title="Скажи вслух">${MIC}</button>` : "");
   const sayWord = w => () => { if (!tts(w)) setStatus("На этом устройстве нет китайского голоса для озвучки слов.", "bad"); };
+  const micFor = (id, w, wp) => { if ($(id + "m")) $(id + "m").onclick = () => practice(w, wp); };
+  $("sayme").hidden = !MIC_OK; $("sayme").onclick = () => practice(c, it.p);
+  if (!voiceRun) $("voice").hidden = true;
   // "В уроке": how the character is used in the textbook lesson; when it is the example word itself,
   // show it once (with the lesson's meaning) instead of two rows
   const [lw, lm] = (it.ln || "").split(" — ");
@@ -481,10 +520,12 @@ function renderInfo(){
   if (it.ln) {
     $("i-lesson").innerHTML = it.lnp ? wordBlock(lw, it.lnp, lm, "sayl") : `<span>${hanify(it.ln)}</span>`;
     if ($("sayl")) $("sayl").onclick = sayWord(lw);
+    micFor("sayl", lw, it.lnp);
   }
   if (!same) {
     $("i-word").innerHTML = wordBlock(it.w, it.wp, it.wm, "sayw");
     if ($("sayw")) $("sayw").onclick = sayWord(it.w);
+    micFor("sayw", it.w, it.wp);
   }
   $("i-count").textContent = d ? d.strokes.length : "…";
   const fan = $("fan"); fan.innerHTML = "";
@@ -742,6 +783,222 @@ new ResizeObserver(() => { const w = $("box").clientWidth; if (w && Math.abs(w -
 const recolor = () => { if (writer) makeWriter(); if (rulesBuilt) { rulesBuilt = false; if (view === "rules") buildRules(); } };
 try { matchMedia("(prefers-color-scheme: dark)").addEventListener("change", recolor); } catch (e) {}
 new MutationObserver(recolor).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+
+// ---- voice: search by voice, "Скажи вслух" with recognition + pitch chart
+// Recognition (Web Speech API) is done by the browser's speech service; pitch is computed here, on the device.
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+const MIC_OK = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+const MIC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/></svg>';
+const hanOf = s => [...(s || "")].filter(ch => /\p{Script=Han}/u.test(ch)).join("");
+function micError(e){
+  const n = e && (e.name || e.error);
+  if (n === "NotAllowedError" || n === "SecurityError" || n === "not-allowed" || n === "service-not-allowed")
+    return "Нет доступа к микрофону. Разреши микрофон для этого сайта в настройках браузера (значок замка рядом с адресом) и нажми ещё раз.";
+  if (n === "NotFoundError" || n === "audio-capture") return "Микрофон не найден.";
+  if (n === "NotReadableError") return "Микрофон занят другим приложением.";
+  if (n === "network") return "Для распознавания речи нужен интернет.";
+  if (n === "no-speech") return "Ничего не услышал. Нажми и скажи ещё раз.";
+  return "Не получилось включить микрофон.";
+}
+function recognizer(alternatives){
+  const r = new SR(); r.lang = "zh-CN"; r.interimResults = false; r.maxAlternatives = alternatives; r.continuous = false;
+  return r;
+}
+
+$("sayme").innerHTML = MIC;
+
+// voice search
+(function(){
+  const btn = $("qmic"), q = $("q"), box = $("results").parentNode;
+  if (!SR) return;
+  btn.innerHTML = MIC; btn.hidden = false; box.classList.add("has-mic");
+  const msg = document.createElement("p"); msg.className = "qmsg"; msg.hidden = true; box.after(msg);
+  const say = (t, bad) => { msg.textContent = t; msg.className = "qmsg" + (bad ? " bad" : ""); msg.hidden = !t; };
+  let rec = null;
+  btn.onclick = () => {
+    if (rec) { rec.stop(); return; }
+    try { speechSynthesis.cancel(); } catch (e) {}
+    rec = recognizer(1);
+    btn.classList.add("on"); say("Слушаю… скажи слово по-китайски.");
+    rec.onresult = e => {
+      const text = (e.results[0][0].transcript || "").replace(/[。，？！.,?!\s]/g, "");
+      q.value = text; say(text ? "" : "Ничего не распознал. Попробуй ещё раз.", !text); q.focus(); showResults();
+    };
+    rec.onerror = e => { if (e.error !== "aborted") say(micError(e), true); };
+    rec.onend = () => { clearTimeout(guard); btn.classList.remove("on"); rec = null; if (msg.textContent.startsWith("Слушаю")) say(""); };
+    // some browsers never end the session without network: give up after 10 s
+    const guard = setTimeout(() => { if (rec) { const r = rec; say("Ничего не услышал — проверь интернет и микрофон и попробуй ещё раз.", true); try { r.abort(); } catch (e) {} btn.classList.remove("on"); rec = null; } }, 10000);
+    try { rec.start(); } catch (e) { clearTimeout(guard); rec = null; btn.classList.remove("on"); say(micError(e), true); }
+  };
+})();
+
+// tones of a pinyin string: split glued pinyin (xuésheng, nǐmen, nǎr) into syllables
+const PY_SYL = new Set("a ai an ang ao ba bai ban bang bao bei ben beng bi bia bian biao bie bin bing bo bu ca cai can cang cao ce cen ceng cha chai chan chang chao che chen cheng chi chong chou chu chua chuai chuan chuang chui chun chuo ci cong cou cu cuan cui cun cuo da dai dan dang dao de dei den deng di dia dian diao die ding diu dong dou du duan dui dun duo e ei en eng er fa fan fang fei fen feng fo fou fu ga gai gan gang gao ge gei gen geng gong gou gu gua guai guan guang gui gun guo ha hai han hang hao he hei hen heng hm hong hou hu hua huai huan huang hui hun huo ji jia jian jiang jiao jie jin jing jiong jiu ju juan jue jun ka kai kan kang kao ke kei ken keng kong kou ku kua kuai kuan kuang kui kun kuo la lai lan lang lao le lei leng li lia lian liang liao lie lin ling liu lo long lou lu luan lue lun luo m ma mai man mang mao me mei men meng mi mian miao mie min ming miu mo mou mu n na nai nan nang nao ne nei nen neng ng ni nian niang niao nie nin ning niu nong nou nu nuan nue nuo o ou pa pai pan pang pao pei pen peng pi pian piao pie pin ping po pou pu qi qia qian qiang qiao qie qin qing qiong qiu qu quan que qun r ran rang rao re ren reng ri rong rou ru rua ruan rui run ruo sa sai san sang sao se sen seng sha shai shan shang shao she shei shen sheng shi shou shu shua shuai shuan shuang shui shun shuo si song sou su suan sui sun suo ta tai tan tang tao te teng ti tian tiao tie ting tong tou tu tuan tui tun tuo wa wai wan wang wei wen weng wo wu xi xia xian xiang xiao xie xin xing xiong xiu xu xuan xue xun ya yan yang yao ye yi yin ying yo yong you yu yuan yue yun za zai zan zang zao ze zei zen zeng zha zhai zhan zhang zhao zhe zhei zhen zheng zhi zhong zhou zhu zhua zhuai zhuan zhuang zhui zhun zhuo zi zong zou zu zuan zui zun zuo".split(" "));
+const TONE_MARK = { 0x304: 1, 0x301: 2, 0x30C: 3, 0x300: 4 }, DIAERESIS = 0x308;
+function syllables(py){
+  const out = [];
+  for (const chunk of py.split(/[\s'’,.?!;:"«»()—-]+/).filter(Boolean)) {
+    // one base letter + tone per character (ǎ → a/3, ü → u/0)
+    const orig = [...chunk.normalize("NFC")], base = [], tone = [];
+    for (const ch of orig) {
+      let b = "", t = 0;
+      for (const m of ch.normalize("NFD")) { const cp = m.codePointAt(0); if (TONE_MARK[cp]) t = TONE_MARK[cp]; else if (cp !== DIAERESIS) b += m.toLowerCase(); }
+      base.push(b); tone.push(t);
+    }
+    const s = base.join(""), n = s.length, best = Array(n + 1).fill(Infinity), cut = Array(n + 1);
+    best[0] = 0;
+    for (let i = 0; i < n; i++) if (best[i] < Infinity) for (let k = 1; k <= 6 && i + k <= n; k++) {
+      const syl = s.slice(i, i + k);
+      // erhua: nǎr = nǎ + r
+      const ok = PY_SYL.has(syl) || (syl.length > 1 && syl !== "er" && syl.endsWith("r") && PY_SYL.has(syl.slice(0, -1)));
+      if (ok && best[i] + 1 < best[i + k]) { best[i + k] = best[i] + 1; cut[i + k] = i; }
+    }
+    if (best[n] === Infinity) { out.push({ syl: chunk, tone: tone.find(Boolean) || 0 }); continue; }
+    const parts = []; for (let j = n; j > 0; j = cut[j]) parts.unshift([cut[j], j]);
+    for (const [a, b] of parts) out.push({ syl: orig.slice(a, b).join(""), tone: tone.slice(a, b).find(Boolean) || 0 });
+  }
+  return out;
+}
+// reference contours on the 1–5 scale: 1 high level, 2 rising, 3 dipping (half-third before another syllable), 4 falling
+function reference(tones){
+  return tones.map((t, i) => {
+    const next = tones[i + 1];
+    if (t === 3 && next === 3) return { tone: 2, line: [3, 5], note: "3+3 → 2" };
+    if (t === 1) return { tone: 1, line: [5, 5] };
+    if (t === 2) return { tone: 2, line: [3, 5] };
+    if (t === 3) return { tone: 3, line: next ? [2, 1, 1] : [2, 1, 4] };
+    if (t === 4) return { tone: 4, line: [5, 1] };
+    return { tone: 0, line: [3, 2.5] };
+  });
+}
+
+// pitch: YIN on 2× downsampled frames
+function pitchYin(buf, rate){
+  const x = new Float32Array(buf.length >> 1);
+  for (let i = 0; i < x.length; i++) x[i] = (buf[2 * i] + buf[2 * i + 1]) / 2;
+  const sr = rate / 2, minT = Math.floor(sr / 450), maxT = Math.ceil(sr / 70), W = x.length - maxT;
+  if (W < 64) return null;
+  const d = new Float32Array(maxT + 1);
+  for (let t = 1; t <= maxT; t++) { let s = 0; for (let i = 0; i < W; i++) { const v = x[i] - x[i + t]; s += v * v; } d[t] = s; }
+  let run = 0;
+  for (let t = 1; t <= maxT; t++) { run += d[t]; d[t] = run ? d[t] * t / run : 1; }
+  for (let t = minT; t < maxT; t++) if (d[t] < 0.15) {
+    while (t + 1 < maxT && d[t + 1] < d[t]) t++;
+    const a = d[t - 1], b = d[t], c = d[t + 1], shift = (a - c) / (2 * (a - 2 * b + c) || 1);
+    return sr / (t + (Number.isFinite(shift) ? shift : 0));
+  }
+  return null;
+}
+const median = a => { const s = [...a].sort((p, q) => p - q); return s.length ? s[s.length >> 1] : NaN; };
+
+let voiceRun = null;
+async function practice(target, py){
+  if (voiceRun) { voiceRun.stop(); return; }
+  try { speechSynthesis.cancel(); } catch (e) {}
+  const panel = $("voice"), status = $("vstatus"), heard = $("vheard"), chart = $("vchart");
+  panel.hidden = false; heard.hidden = true; chart.innerHTML = "";
+  const setStatus2 = (t, bad) => { status.textContent = t; status.className = "vstatus" + (bad ? " bad" : ""); };
+  const sylls = syllables(py), ref = reference(sylls.map(s => s.tone));
+  let stream;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
+  } catch (e) { setStatus2(micError(e), true); return; }
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  const an = ctx.createAnalyser(); an.fftSize = 2048;
+  ctx.createMediaStreamSource(stream).connect(an);
+  const buf = new Float32Array(an.fftSize), frames = [], t0 = performance.now();
+  let started = false, lastVoice = 0, noise = 0.005, done = false, rec = null, alts = [];
+  const btns = [...document.querySelectorAll(".speak.mic")];
+  btns.forEach(b => b.classList.add("on"));
+  setStatus2(`Слушаю… скажи: ${target} (${py})`);
+  if (SR) {
+    rec = recognizer(5);
+    rec.onresult = e => { alts = [...e.results[0]].map(a => a.transcript); showHeard(); };
+    rec.onerror = e => {
+      if (e.error === "aborted" || e.error === "no-speech") return;
+      heard.hidden = false;
+      // some phones can't give the microphone to recognition and to the pitch recorder at once
+      heard.textContent = e.error === "audio-capture" ? "Распознавание не получило звук (микрофон занят записью графика) — на этом устройстве показываю только график тона." : micError(e);
+      alts = null;
+    };
+    try { rec.start(); } catch (e) { rec = null; }
+  }
+  function showHeard(){
+    if (alts === null) return; // an error message is already shown
+    heard.hidden = false;
+    if (!alts.length) { heard.textContent = SR ? "Распознавание ничего не вернуло — возможно, нет интернета или фраза была слишком короткой." : "Распознавание речи в этом браузере недоступно — показываю только график тона."; return; }
+    const want = hanOf(target), hit = alts.some(a => hanOf(a).includes(want));
+    heard.innerHTML = `Распознано: <span class="han">${esc(alts[0])}</span> — ` + (hit ? `<span class="ok">совпало ✓</span>` : `<span class="no">не совпало</span>`)
+      + (!hit && alts.length > 1 ? ` <span class="wp">(варианты: ${alts.slice(1).map(esc).join(", ")})</span>` : "");
+  }
+  const timer = setInterval(() => {
+    an.getFloatTimeDomainData(buf);
+    let rms = 0; for (const v of buf) rms += v * v; rms = Math.sqrt(rms / buf.length);
+    const t = performance.now() - t0;
+    if (t < 200) { noise = Math.max(noise, rms); return; }
+    const f0 = rms > Math.max(0.01, noise * 2.5) ? pitchYin(buf, ctx.sampleRate) : null;
+    frames.push({ t, f0 });
+    if (f0) { started = true; lastVoice = t; }
+    if ((started && t - lastVoice > 800) || t > 5000) stop();
+  }, 25);
+  function stop(){
+    if (done) return; done = true;
+    clearInterval(timer); stream.getTracks().forEach(tr => tr.stop()); ctx.close();
+    btns.forEach(b => b.classList.remove("on"));
+    voiceRun = null;
+    if (rec) { try { rec.stop(); } catch (e) {} setTimeout(showHeard, 1500); } else showHeard();
+    draw();
+  }
+  voiceRun = { stop };
+  $("vstop").onclick = () => voiceRun ? stop() : (panel.hidden = true);
+
+  function draw(){
+    // voiced frames → smoothed semitones
+    let pts = frames.map(f => ({ t: f.t, st: f.f0 ? 12 * Math.log2(f.f0 / 100) : null }));
+    pts = pts.map((p, i) => { if (p.st == null) return p; const w = pts.slice(Math.max(0, i - 2), i + 3).filter(q => q.st != null).map(q => q.st); return { t: p.t, st: median(w) }; });
+    const voiced = pts.filter(p => p.st != null);
+    if (voiced.length < 4) { setStatus2("Не удалось услышать голос. Скажи громче и ближе к микрофону, затем нажми ещё раз.", true); return; }
+    // drop octave errors
+    const m = median(voiced.map(p => p.st));
+    pts.forEach(p => { if (p.st != null && Math.abs(p.st - m) > 9) p.st = null; });
+    // segments of voiced frames (gaps ≤ 2 frames), adjusted to the number of syllables
+    let segs = [], cur = null, gap = 0;
+    pts.forEach((p, i) => {
+      if (p.st != null) { if (!cur) cur = { a: i, b: i }; cur.b = i; gap = 0; }
+      else if (cur && ++gap > 2) { segs.push(cur); cur = null; }
+    });
+    if (cur) segs.push(cur);
+    segs = segs.filter(s => s.b - s.a >= 2);
+    const n = Math.max(1, sylls.length);
+    while (segs.length > n) { let k = 0, best = Infinity; for (let i = 0; i < segs.length - 1; i++) { const g = segs[i + 1].a - segs[i].b; if (g < best) { best = g; k = i; } } segs.splice(k, 2, { a: segs[k].a, b: segs[k + 1].b }); }
+    while (segs.length && segs.length < n) {
+      let k = 0; segs.forEach((s, i) => { if (s.b - s.a > segs[k].b - segs[k].a) k = i; });
+      const s = segs[k]; if (s.b - s.a < 3) break;
+      const half = (s.a + s.b) >> 1; segs.splice(k, 1, { a: s.a, b: half }, { a: half + 1, b: s.b });
+    }
+    // speaker's middle: median of this and earlier attempts (stored on this device only)
+    let hist = store.get("-voicemid", []); hist = [...hist, m].slice(-10); store.set("-voicemid", hist);
+    const mid = median(hist), level = st => Math.min(5.5, Math.max(0.5, 3 + (st - mid) / 2.5));
+    const shape = ys => { if (ys.length < 2) return ""; const a = ys[0], b = ys[ys.length - 1], lo = Math.min(...ys), hi = Math.max(...ys);
+      if (hi - lo < 0.8) return "ровно"; if (lo < a - 0.5 && lo < b - 0.5) return "вниз-вверх"; return b - a > 0 ? "вверх" : "вниз"; };
+    const W = 84, H = 68, X = x => 6 + x * (W - 12), Y = v => H - 6 - (v - 1) / 4 * (H - 12);
+    const TONE = ["лёгкий", "1-й: ровный высокий", "2-й: вверх", "3-й: вниз-вверх", "4-й: резко вниз"];
+    chart.innerHTML = sylls.map((s, i) => {
+      const r = ref[i], seg = segs[i];
+      const refPath = r.line.map((v, j) => `${j ? "L" : "M"}${X(j / (r.line.length - 1))},${Y(v)}`).join(" ");
+      let you = "", ys = [];
+      if (seg) {
+        const part = pts.slice(seg.a, seg.b + 1).filter(p => p.st != null);
+        ys = part.map(p => level(p.st));
+        you = part.map((p, j) => `${j ? "L" : "M"}${X(part.length > 1 ? j / (part.length - 1) : 0.5).toFixed(1)},${Y(level(p.st)).toFixed(1)}`).join(" ");
+      }
+      const grid = [1, 2, 3, 4, 5].map(v => `<line class="grid" x1="0" x2="${W}" y1="${Y(v)}" y2="${Y(v)}"/>`).join("");
+      return `<figure><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(s.syl)}: эталон ${TONE[r.tone]}, у тебя ${shape(ys) || "не слышно"}">${grid}<path class="ref" d="${refPath}"/>${you ? `<path class="you" d="${you}"/>` : ""}</svg>`
+        + `<figcaption><b>${esc(s.syl)}</b><br>${TONE[r.tone]}${r.note ? ` (${r.note})` : ""}<br>у тебя: ${shape(ys) || "—"}</figcaption></figure>`;
+    }).join("");
+    setStatus2("Пунктир — эталон тона, красная линия — твой голос. Нажми микрофон, чтобы попробовать ещё раз.");
+  }
+}
 
 // ---- offline (PWA). DATA_CACHE / SENT_CACHE must match DATA / SENT in sw.js
 const DATA_CACHE = "propisi-data-v1";
