@@ -1,13 +1,19 @@
 // Service worker for «Прописи HSK».
 // shell — page, library, fonts, icons: precached on install.
-// data  — data/*.json (strokes + audio, ~21 MB): cached as levels are opened
+// data  — data/strokes-*.json, audio-*.json (~21 MB): cached as levels are opened
 //         or all at once via the «Скачать всё для офлайна» button.
+// sent  — data/sentences-*.json (~1 MB): same, but in its own cache, so updating the example
+//         sentences doesn't throw away 21 MB of strokes and audio.
 // After changing index.html/lib/fonts, bump SHELL_VERSION so clients pick up new files.
-// DATA_VERSION only needs a bump when data/*.json change.
-const SHELL_VERSION = 2;
+// DATA_VERSION — when strokes/audio change; SENT_VERSION — when sentences change
+// (each together with the same number in DATA_CACHE / SENT_CACHE in index.html).
+const SHELL_VERSION = 3;
 const DATA_VERSION = 1;
+const SENT_VERSION = 1;
 const SHELL = `propisi-shell-v${SHELL_VERSION}`;
 const DATA = `propisi-data-v${DATA_VERSION}`;
+const SENT = `propisi-sent-v${SENT_VERSION}`;
+const isSentences = path => /\/data\/sentences-[^/]+\.json$/.test(path);
 
 const SHELL_FILES = [
   "./",
@@ -41,7 +47,9 @@ self.addEventListener("install", e => {
 
 self.addEventListener("activate", e => {
   e.waitUntil(caches.keys()
-    .then(keys => Promise.all(keys.filter(k => k.startsWith("propisi-") && k !== SHELL && k !== DATA).map(k => caches.delete(k))))
+    .then(keys => Promise.all(keys.filter(k => k.startsWith("propisi-") && ![SHELL, DATA, SENT].includes(k)).map(k => caches.delete(k))))
+    // sentences used to live in the data cache: drop those old copies
+    .then(() => caches.open(DATA)).then(c => c.keys().then(reqs => Promise.all(reqs.filter(r => isSentences(new URL(r.url).pathname)).map(r => c.delete(r)))))
     .then(() => self.clients.claim()));
 });
 
@@ -77,5 +85,5 @@ self.addEventListener("fetch", e => {
   if (url.origin !== location.origin) return;
   if (req.mode === "navigate") return e.respondWith(page(req));
   const isData = /\/data\/[^/]+\.json$/.test(url.pathname);
-  e.respondWith(cacheFirst(req, isData ? DATA : SHELL));
+  e.respondWith(cacheFirst(req, isSentences(url.pathname) ? SENT : isData ? DATA : SHELL));
 });

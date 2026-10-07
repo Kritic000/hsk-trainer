@@ -8,6 +8,7 @@
     "select": "node --max-old-space-size=4096 select.mjs",
     "build": "node build.mjs",
     "show": "node show.mjs",
+    "hsk1": "node hsk1.mjs",
     "fonts": "node build-fonts.mjs",
     "font-gap": "node font-gap.mjs"
   },
