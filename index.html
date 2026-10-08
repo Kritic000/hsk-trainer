@@ -133,6 +133,8 @@ button:focus-visible,select:focus-visible{outline:2px solid var(--cinnabar);outl
 .vchart .you{fill:none;stroke:var(--cinnabar);stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
 .vchart b{color:var(--ink);font-size:.9rem}
 .vnote{font-size:.78rem;color:var(--muted)}
+.vlang{font-size:.75rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.vheard.help,.qmsg.bad{line-height:1.5}
 .speak svg{width:18px;height:18px}
 .speak.sm svg{width:15px;height:15px}
 .speak.playing{background:var(--cinnabar-soft)}
@@ -283,6 +285,7 @@ path.old{fill:var(--ghost)} path.new{fill:var(--cinnabar)} path.all{fill:var(--s
             </div>
             <p class="vstatus" id="vstatus"></p>
             <p class="vheard" id="vheard" hidden></p>
+            <p class="vlang" id="vlang" hidden></p>
             <div class="vchart" id="vchart"></div>
             <p class="vnote">Распознавание сверяет слово целиком и может «простить» неверный тон, если слово угадывается. Сам тон показывает график: сравни свою линию с пунктиром. Высота голоса считается на устройстве и никуда не отправляется; распознавание речи делает сервис браузера (в Chrome — Google), для него звук уходит в интернет.</p>
           </section>
@@ -800,9 +803,25 @@ function micError(e){
   if (n === "no-speech") return "Ничего не услышал. Нажми и скажи ещё раз.";
   return "Не получилось включить микрофон.";
 }
-function recognizer(alternatives){
-  const r = new SR(); r.lang = "zh-CN"; r.interimResults = false; r.maxAlternatives = alternatives; r.continuous = false;
+// Language of recognition. Some Android phones ignore "zh-CN" and answer in the system language
+// (Russian); then we try "cmn-Hans-CN". The code that worked is remembered on this device.
+const ASR_LANGS = ["zh-CN", "cmn-Hans-CN"];
+let asrLang = ASR_LANGS.includes(store.get("-asrlang", "")) ? store.get("-asrlang", "") : ASR_LANGS[0];
+const nextAsrLang = () => ASR_LANGS[ASR_LANGS.indexOf(asrLang) + 1] || null;
+function setAsrLang(l){ asrLang = l; store.set("-asrlang", l); }
+function recognizer(alternatives, lang = asrLang){
+  const r = new SR();
+  r.lang = lang;            // set before start(), on every new object
+  r.interimResults = false; r.maxAlternatives = alternatives; r.continuous = false;
   return r;
+}
+// what came back: Chinese, Russian, Latin or nothing
+const scriptOf = t => /\p{Script=Han}/u.test(t) ? "han" : /[А-Яа-яЁё]/.test(t) ? "cyr" : /[A-Za-z]/.test(t) ? "lat" : "";
+function wrongLangHelp(script){
+  return `<b>Телефон распознаёт ${script === "cyr" ? "по-русски" : "не по-китайски"}.</b> Добавь китайский в языки голосового ввода:<br>`
+    + `<b>Android:</b> Настройки → Система → Язык и ввод → Голосовой ввод Google (или Gboard → Голосовой ввод) → Языки → «中文（中国大陆）» / «Китайский (упрощённое письмо)».<br>`
+    + `<b>iPhone:</b> Настройки → Основные → Клавиатура → Клавиатуры → Новая клавиатура → «Китайский (упрощённый)»; там же включи «Диктовку».<br>`
+    + `Потом нажми микрофон ещё раз.`;
 }
 
 $("sayme").innerHTML = MIC;
@@ -813,22 +832,37 @@ $("sayme").innerHTML = MIC;
   if (!SR) return;
   btn.innerHTML = MIC; btn.hidden = false; box.classList.add("has-mic");
   const msg = document.createElement("p"); msg.className = "qmsg"; msg.hidden = true; box.after(msg);
-  const say = (t, bad) => { msg.textContent = t; msg.className = "qmsg" + (bad ? " bad" : ""); msg.hidden = !t; };
+  const say = (t, bad, html) => { msg[html ? "innerHTML" : "textContent"] = t; msg.className = "qmsg" + (bad ? " bad" : ""); msg.hidden = !t; };
   let rec = null;
-  btn.onclick = () => {
-    if (rec) { rec.stop(); return; }
-    try { speechSynthesis.cancel(); } catch (e) {}
-    rec = recognizer(1);
-    btn.classList.add("on"); say("Слушаю… скажи слово по-китайски.");
+  function listen(lang, note){
+    rec = recognizer(1, lang);
+    btn.classList.add("on"); say(`${note || "Слушаю… скажи слово по-китайски."} Язык распознавания: ${lang}.`);
+    let retry = false;
     rec.onresult = e => {
-      const text = (e.results[0][0].transcript || "").replace(/[。，？！.,?!\s]/g, "");
+      const raw = e.results[0][0].transcript || "", script = scriptOf(raw);
+      if (script === "cyr" || script === "lat") {
+        const next = ASR_LANGS[ASR_LANGS.indexOf(lang) + 1];
+        if (next) { setAsrLang(next); retry = true; return; }          // ask again with the other code
+        setAsrLang(ASR_LANGS[0]); say(`Распознано «${raw}» (${lang}). ` + wrongLangHelp(script), true, true); return;
+      }
+      if (script === "han" && lang !== ASR_LANGS[0]) setAsrLang(lang);
+      const text = raw.replace(/[。，？！.,?!\s]/g, "");
       q.value = text; say(text ? "" : "Ничего не распознал. Попробуй ещё раз.", !text); q.focus(); showResults();
     };
     rec.onerror = e => { if (e.error !== "aborted") say(micError(e), true); };
-    rec.onend = () => { clearTimeout(guard); btn.classList.remove("on"); rec = null; if (msg.textContent.startsWith("Слушаю")) say(""); };
+    rec.onend = () => {
+      clearTimeout(guard); btn.classList.remove("on"); rec = null;
+      if (retry) { listen(asrLang, `Телефон ответил не по-китайски — скажи ещё раз, пробую код ${asrLang}.`); return; }
+      if (msg.textContent.startsWith("Слушаю")) say("");
+    };
     // some browsers never end the session without network: give up after 10 s
     const guard = setTimeout(() => { if (rec) { const r = rec; say("Ничего не услышал — проверь интернет и микрофон и попробуй ещё раз.", true); try { r.abort(); } catch (e) {} btn.classList.remove("on"); rec = null; } }, 10000);
     try { rec.start(); } catch (e) { clearTimeout(guard); rec = null; btn.classList.remove("on"); say(micError(e), true); }
+  }
+  btn.onclick = () => {
+    if (rec) { rec.stop(); return; }
+    try { speechSynthesis.cancel(); } catch (e) {}
+    listen(asrLang);
   };
 })();
 
@@ -911,8 +945,10 @@ async function practice(target, py){
   const btns = [...document.querySelectorAll(".speak.mic")];
   btns.forEach(b => b.classList.add("on"));
   setStatus2(`Слушаю… скажи: ${target} (${py})`);
+  const lang = asrLang, vlang = $("vlang");
+  vlang.hidden = !SR; vlang.textContent = `Язык распознавания: ${lang} (запрошен у браузера${SR === window.webkitSpeechRecognition ? ", webkitSpeechRecognition" : ""}).`;
   if (SR) {
-    rec = recognizer(5);
+    rec = recognizer(5, lang);
     rec.onresult = e => { alts = [...e.results[0]].map(a => a.transcript); showHeard(); };
     rec.onerror = e => {
       if (e.error === "aborted" || e.error === "no-speech") return;
@@ -927,6 +963,22 @@ async function practice(target, py){
     if (alts === null) return; // an error message is already shown
     heard.hidden = false;
     if (!alts.length) { heard.textContent = SR ? "Распознавание ничего не вернуло — возможно, нет интернета или фраза была слишком короткой." : "Распознавание речи в этом браузере недоступно — показываю только график тона."; return; }
+    heard.className = "vheard";
+    // answer in Russian/Latin: the phone ignored the language — not the learner's mistake
+    const script = scriptOf(alts.join(" "));
+    if (script === "cyr" || script === "lat") {
+      const next = ASR_LANGS[ASR_LANGS.indexOf(lang) + 1];
+      heard.className = "vheard help";
+      if (next) {
+        setAsrLang(next);
+        heard.innerHTML = `Распознано «${esc(alts[0])}» — телефон ответил ${script === "cyr" ? "по-русски" : "не по-китайски"} на код ${lang}. Переключил на <b>${next}</b>: нажми микрофон и скажи ещё раз.`;
+      } else {
+        setAsrLang(ASR_LANGS[0]);
+        heard.innerHTML = `Распознано «${esc(alts[0])}» (${lang}). ` + wrongLangHelp(script);
+      }
+      return;
+    }
+    if (lang !== ASR_LANGS[0]) setAsrLang(lang); // this code works here — keep it
     const want = hanOf(target), hit = alts.some(a => hanOf(a).includes(want));
     heard.innerHTML = `Распознано: <span class="han">${esc(alts[0])}</span> — ` + (hit ? `<span class="ok">совпало ✓</span>` : `<span class="no">не совпало</span>`)
       + (!hit && alts.length > 1 ? ` <span class="wp">(варианты: ${alts.slice(1).map(esc).join(", ")})</span>` : "");
