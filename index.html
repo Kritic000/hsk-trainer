@@ -1864,7 +1864,7 @@ document.querySelectorAll("#bnav button").forEach(b => b.onclick = () => { if (s
 // ---- offline (PWA). DATA_CACHE / SENT_CACHE / SPEECH_CACHE must match DATA / SENT / SPEECH in sw.js
 const DATA_CACHE = "propisi-data-v1";
 const SENT_CACHE = "propisi-sent-v2";
-const SPEECH_CACHE = "propisi-speech-v2";
+const SPEECH_CACHE = "propisi-speech-v3";
 const cacheFor = u => caches.open(/sentences-/.test(u) ? SENT_CACHE : /speech-/.test(u) ? SPEECH_CACHE : DATA_CACHE);
 // dialogues and phrases are small: fetched along with «скачать всё», not counted in the levels list
 async function cacheSpeech(){ for (const id of SPEECH_IDS) { const u = `data/speech-${id}.json`, c = await cacheFor(u); if (!(await c.match(u))) await c.add(u); } }
