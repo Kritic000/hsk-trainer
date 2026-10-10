@@ -20,6 +20,7 @@ const CONTEXT = {
   "十分": (p, n) => n === "钟" || /[一二三四五六七八九]/.test(p), // 十 分钟, 二十 分
   "好多": (p, n) => n === "了",                      // 好 多 了 "much better"
   "个人": (p, n) => /[一二三四五六七八九十几这那哪每两]/.test(p), // 一 个 人
+  "个儿": (p, n) => n === "子",                      // 一 个 儿子
 };
 // Proper nouns not capitalized in the dictionary / capitalized there but common nouns
 const PROPER_EXTRA = new Set(["美国", "日本", "英国", "法国", "德国", "上海"]);

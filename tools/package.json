@@ -9,6 +9,7 @@
     "build": "node build.mjs",
     "show": "node show.mjs",
     "hsk1": "node hsk1.mjs",
+    "speech": "node speech.mjs",
     "fonts": "node build-fonts.mjs",
     "font-gap": "node font-gap.mjs"
   },

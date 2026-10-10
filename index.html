@@ -205,31 +205,78 @@ path.old{fill:var(--ghost)} path.new{fill:var(--cinnabar)} path.all{fill:var(--s
 .mist .c{font-family:var(--f-han);font-size:1.8rem;line-height:1;width:44px;text-align:center}
 .steps{margin:0;padding-left:1.3em;display:grid;gap:6px;max-width:68ch}
 
-/* pronunciation trainer */
-.pron-view{display:grid;gap:12px}
-.pron-view .plv{flex:0 1 130px}
+/* two sections with bottom navigation */
+.sect{display:grid;gap:14px;min-width:0}
+.wrap{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
+.bnav{position:fixed;z-index:20;left:0;right:0;bottom:0;display:flex;justify-content:center;background:var(--sheet);border-top:1px solid var(--line);padding:6px 16px calc(6px + env(safe-area-inset-bottom))}
+.bnav div{display:flex;gap:6px;width:100%;max-width:420px}
+.bnav button{flex:1;border:0;background:none;border-radius:10px;padding:5px 10px;cursor:pointer;display:grid;justify-items:center;gap:1px;font-size:.78rem;font-weight:600;color:var(--muted)}
+.bnav button .han{font-size:1.25rem;line-height:1.15;font-weight:500}
+.bnav button[aria-current="page"]{background:var(--cinnabar-soft);color:var(--cinnabar)}
+
+/* speech section */
+.speech .plv{flex:0 1 130px}
+.reach{display:flex;align-items:center;gap:8px 12px;flex-wrap:wrap;padding:12px 14px}
+.reach p{margin:0;flex:1 1 240px;font-size:.88rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.reach .btn{flex:none}
+.sopts{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.sopts .chip[aria-pressed="true"]{background:var(--cinnabar-soft);color:var(--cinnabar);border-color:var(--cinnabar)}
+.spane{display:grid;gap:12px;min-width:0}
+.speech.nopy .ppy,.speech.noru .pru{display:none}
+.speech .card > p.lead2{margin:0;color:var(--muted);font-size:.9rem;max-width:68ch}
+.speech .actions{max-width:none;margin-top:0;flex-wrap:wrap}
+.speech .actions .btn{flex:0 1 auto;min-width:120px}
+.ppy{color:var(--cinnabar);font-size:.95rem}
+.pru{font-size:.92rem}
+.dz{font-family:var(--f-han);font-size:1.3rem;line-height:1.4;overflow-wrap:anywhere}
+
+/* dialogues */
+.dlg{display:grid;gap:10px}
+.dhead{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.dhead h2{margin:0;font-size:1.05rem}
+.dhead .row{display:flex;gap:8px;flex-wrap:wrap}
+.dlg.playing .role{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.dlines{margin:0;padding:0;list-style:none;display:grid;gap:4px}
+.dlines li{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:2px 10px;align-items:start;padding:8px;border-radius:10px;border:1px solid transparent}
+.dlines li.cur{border-color:var(--cinnabar);background:var(--paper)}
+.who{display:inline-grid;place-items:center;min-width:26px;height:26px;padding:0 7px;border-radius:13px;background:var(--ink);color:var(--paper);font-size:.78rem;font-weight:700;margin-top:4px}
+.who.me{background:var(--cinnabar);color:var(--sheet)}
+.drole{display:grid;gap:10px;border-top:1px solid var(--line);padding-top:12px}
+
+/* phrase patterns */
+.pat{display:grid;gap:10px}
+.pat .sub{margin:0}
+.pl{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;align-items:start}
+.pat ul{margin:0;padding:0 0 0 12px;list-style:none;display:grid;gap:10px;border-left:3px solid var(--line)}
+.pat ul .dz{font-size:1.15rem}
+.subs{margin:0;font-size:.9rem;color:var(--muted);display:flex;flex-wrap:wrap;gap:6px 8px;align-items:baseline}
+.subs .sw{border:1px solid var(--line);border-radius:8px;padding:3px 8px;color:var(--ink);background:var(--paper)}
+.subs .han{font-size:1.05rem;color:var(--ink)}
+
+/* pronunciation trainer and the answer box shared with role play and review */
 .pcard{display:grid;gap:12px}
 .phead{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
 .pnav{display:flex;align-items:center;gap:8px;font-size:.88rem;color:var(--muted);font-variant-numeric:tabular-nums}
 .pnav .iconbtn{height:34px;width:34px}
 .pnav .okmark{color:var(--ok);font-weight:600}
-#phide[aria-pressed="true"]{background:var(--cinnabar-soft);color:var(--cinnabar);border-color:var(--cinnabar)}
 #pbody{display:grid;gap:6px}
 .pline{display:flex;align-items:center;gap:12px}
 .pz{font-family:var(--f-han);font-size:clamp(1.6rem,6vw,2.3rem);line-height:1.35;min-width:0;overflow-wrap:anywhere}
-.ppy{color:var(--cinnabar);font-size:1.1rem}
-.pru{font-size:1rem}
-.pcard.hide .ppy,.pcard.hide .pru{display:none}
-.pans{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.pcard .ppy{font-size:1.1rem}
+.pcard .pru,.revq{font-size:1rem}
+.revq{font-size:1.15rem;font-weight:600}
+.abox{display:grid;gap:8px}
+.pans{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
 .pans .pmic{flex:0 0 auto;display:inline-flex;align-items:center;gap:8px;justify-content:center}
 .pans .pmic svg{width:18px;height:18px}
 .pans .pmic.on{background:var(--ink);border-color:var(--ink)}
-#ptext{flex:1 1 240px;min-width:0;font:inherit;font-size:1.05rem;padding:9px 12px;border:1px solid var(--line);border-radius:var(--r);background:var(--sheet);color:var(--ink)}
-#ptext:focus{outline:2px solid var(--cinnabar);outline-offset:1px;border-color:transparent}
-#ptext::placeholder{color:var(--muted);font-size:.9rem}
+.ptext,.mform input,.mform textarea{font:inherit;font-size:1.05rem;padding:9px 12px;border:1px solid var(--line);border-radius:var(--r);background:var(--sheet);color:var(--ink)}
+.ptext{flex:1 1 240px;min-width:0}
+.ptext:focus,.mform input:focus,.mform textarea:focus{outline:2px solid var(--cinnabar);outline-offset:1px;border-color:transparent}
+.ptext::placeholder,.mform ::placeholder{color:var(--muted);font-size:.9rem}
 .pmsg{margin:0;font-size:.9rem;color:var(--muted);line-height:1.5}
 .pmsg:empty{display:none}
-.pmsg.bad{color:var(--cinnabar)}
+.pmsg.bad{color:var(--cinnabar)} .pmsg.good{color:var(--ok)}
 .presult{display:grid;gap:10px;border-top:1px solid var(--line);padding-top:12px}
 .presult p{margin:0}
 .pscore b{font-size:1.5rem;font-variant-numeric:tabular-nums;margin-right:6px}
@@ -252,6 +299,13 @@ path.old{fill:var(--ghost)} path.new{fill:var(--cinnabar)} path.all{fill:var(--s
 #perrs ol{margin:0;padding-left:1.3em;display:grid;gap:4px;font-size:.92rem}
 #perrs b{font-variant-numeric:tabular-nums}
 
+/* my dialogues */
+.mform{display:grid;gap:10px}
+.mform h2{margin:0}
+.mform textarea{min-height:150px;resize:vertical;font-family:var(--f-han),var(--f-ui);line-height:1.5}
+.mfile{display:grid;gap:10px}
+.mfile p{margin:0}
+
 /* offline */
 .offline{display:flex;align-items:center;gap:10px 14px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:14px;font-size:.85rem;color:var(--muted)}
 .offline .btn{flex:none}
@@ -269,6 +323,7 @@ path.old{fill:var(--ghost)} path.new{fill:var(--cinnabar)} path.all{fill:var(--s
     <div class="progress" id="progress"></div>
   </header>
 
+  <div id="hanzi" class="sect">
   <div class="search">
     <label for="q" class="sr">Поиск иероглифа</label>
     <input id="q" type="search" autocomplete="off" spellcheck="false" placeholder="Поиск по всем уровням: 好, hao, hǎo3, мама, 汉语">
@@ -402,7 +457,9 @@ path.old{fill:var(--ghost)} path.new{fill:var(--cinnabar)} path.all{fill:var(--s
     </section>
   </div>
 
-  <div id="pron" class="pron-view" hidden>
+  </div>
+
+  <div id="speech" class="speech sect" hidden>
     <div class="picker">
       <div class="gsel plv"><label for="plv" class="sr">Уровень</label><select id="plv"></select></div>
       <div class="gsel">
@@ -413,49 +470,86 @@ path.old{fill:var(--ghost)} path.new{fill:var(--cinnabar)} path.all{fill:var(--s
       </div>
     </div>
 
-    <section class="card pcard" aria-live="polite">
-      <div class="phead">
-        <div class="pnav">
-          <button class="iconbtn" id="pprev" aria-label="Предыдущая фраза">‹</button>
-          <span id="pcount"></span>
-          <button class="iconbtn" id="pnextp" aria-label="Следующая фраза">›</button>
-        </div>
-        <button class="chip" id="phide" aria-pressed="false">Скрыть пиньинь и перевод</button>
-      </div>
-      <div id="pbody">
-        <div class="pline">
-          <div class="pz" id="pz" lang="zh-CN"></div>
-          <button class="speak" id="psay" aria-label="Послушать фразу"></button>
-        </div>
-        <div class="ppy" id="ppy"></div>
-        <div class="pru" id="pru"></div>
-        <div class="pans">
-          <button class="btn primary pmic" id="pmic" type="button" hidden></button>
-          <label class="sr" for="ptext">Ответ голосовым вводом клавиатуры</label>
-          <input id="ptext" type="text" lang="zh-CN" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="done"
-            placeholder="Или продиктуй фразу сюда голосовым вводом клавиатуры">
-        </div>
-        <p class="pmsg" id="pmsg" role="status"></p>
-        <div class="presult" id="presult" hidden>
-          <p class="pscore"><b id="ppct"></b> <span id="pverdict"></span></p>
-          <p class="pheard" id="pheard"></p>
-          <ol class="psyl" id="psyl"></ol>
-          <div class="phints" id="phints"></div>
-          <div class="actions">
-            <button class="btn" id="pagain">Ещё раз</button>
-            <button class="btn primary" id="pnext">Дальше</button>
-          </div>
-        </div>
-      </div>
-      <p class="empty" id="pempty" hidden></p>
+    <section class="card reach">
+      <p id="reachtxt"></p>
+      <button class="btn" id="reachset" type="button">Я дошёл до этого урока</button>
+      <button class="btn primary" id="revgo" type="button">Повторить пройденное</button>
     </section>
 
-    <section class="card pstats">
-      <h2 class="sub">Статистика урока</h2>
-      <p id="pdone"></p>
-      <div id="perrs"></div>
-      <p class="vnote">Распознавание речи сравнивает услышанные слова: если сервис понял другое слово, видно, какой слог прозвучал иначе. Статистика хранится только на этом устройстве.</p>
-    </section>
+    <div id="spmain" class="sect">
+      <nav class="levels" id="stabs" role="tablist" aria-label="Что делать в уроке">
+        <button class="lv" role="tab" data-t="dlg">Диалоги</button>
+        <button class="lv" role="tab" data-t="phr">Фразы</button>
+        <button class="lv" role="tab" data-t="pron">Произношение</button>
+        <button class="lv" role="tab" data-t="mine">Мои диалоги</button>
+      </nav>
+      <div class="sopts">
+        <button class="chip" id="hidepy" type="button" aria-pressed="false">Скрыть пиньинь</button>
+        <button class="chip" id="hideru" type="button" aria-pressed="false">Скрыть перевод</button>
+      </div>
+      <p class="pmsg bad" id="spmsg" role="status"></p>
+
+      <div id="sp-dlg" class="spane"></div>
+      <div id="sp-phr" class="spane" hidden></div>
+
+      <div id="sp-pron" class="spane" hidden>
+        <section class="card pcard" aria-live="polite">
+          <div class="phead">
+            <div class="pnav">
+              <button class="iconbtn" id="pprev" aria-label="Предыдущая фраза">‹</button>
+              <span id="pcount"></span>
+              <button class="iconbtn" id="pnextp" aria-label="Следующая фраза">›</button>
+            </div>
+          </div>
+          <div id="pbody">
+            <div class="pline">
+              <div class="pz" id="pz" lang="zh-CN"></div>
+              <button class="speak" id="psay" aria-label="Послушать фразу"></button>
+            </div>
+            <div class="ppy" id="ppy"></div>
+            <div class="pru" id="pru"></div>
+            <div class="abox" id="pans"></div>
+            <div class="actions" id="pact" hidden>
+              <button class="btn" id="pagain" type="button">Ещё раз</button>
+              <button class="btn primary" id="pnext" type="button">Дальше</button>
+            </div>
+          </div>
+          <p class="empty" id="pempty" hidden></p>
+        </section>
+        <section class="card pstats">
+          <h2 class="sub">Статистика урока</h2>
+          <p id="pdone"></p>
+          <div id="perrs"></div>
+          <p class="vnote">Распознавание речи сравнивает услышанные слова: если сервис понял другое слово, видно, какой слог прозвучал иначе. Статистика хранится только на этом устройстве.</p>
+        </section>
+      </div>
+
+      <div id="sp-mine" class="spane" hidden>
+        <div id="minelist" class="spane"></div>
+        <section class="card mform">
+          <h2 class="sub">Добавить свой диалог к этому уроку</h2>
+          <p class="lead2">Вставь текст диалога: по реплике на строку, можно с ролями («A: 你好！») и с пиньинем или переводом в следующей строке. Пиньинь и озвучка добавятся сами.</p>
+          <label class="sr" for="mtitle">Название диалога</label>
+          <input id="mtitle" type="text" maxlength="80" autocomplete="off" placeholder="Название (необязательно)">
+          <label class="sr" for="mtext">Текст диалога</label>
+          <textarea id="mtext" lang="zh-CN" spellcheck="false" placeholder="A: 你好！你叫什么名字？&#10;B: 我叫…"></textarea>
+          <p class="pmsg" id="mmsg" role="status"></p>
+          <div class="actions"><button class="btn primary" id="madd" type="button">Добавить диалог</button></div>
+        </section>
+        <section class="card mfile">
+          <h2 class="sub">Сохранить в файл</h2>
+          <p class="pmsg" id="mcount"></p>
+          <div class="actions">
+            <button class="btn" id="mexport" type="button">Экспорт в файл</button>
+            <button class="btn" id="mimport" type="button">Импорт из файла</button>
+            <input id="mfile" type="file" accept="application/json,.json" hidden>
+          </div>
+          <p class="vnote">Свои диалоги хранятся только на этом устройстве (IndexedDB браузера) и никуда не отправляются. Если очистить данные сайта, они пропадут — сохрани копию в файл.</p>
+        </section>
+      </div>
+    </div>
+
+    <div id="sp-review" class="spane" hidden></div>
   </div>
 
   <div class="offline" id="offline" hidden>
@@ -464,6 +558,11 @@ path.old{fill:var(--ghost)} path.new{fill:var(--cinnabar)} path.all{fill:var(--s
   </div>
   <p class="credits">Примеры предложений — <a href="https://tatoeba.org" target="_blank" rel="noopener">Tatoeba</a>, лицензия <a href="https://creativecommons.org/licenses/by/2.0/fr/" target="_blank" rel="noopener">CC-BY 2.0 FR</a>. Пиньинь расставлен автоматически, переводы с английского и предложения с пометкой «составлено» сделаны для тренажёра.</p>
 </div>
+
+<nav class="bnav" id="bnav" aria-label="Раздел"><div>
+  <button type="button" data-s="hanzi"><span class="han" aria-hidden="true">字</span>Иероглифы</button>
+  <button type="button" data-s="speech"><span class="han" aria-hidden="true">说</span>Речь</button>
+</div></nav>
 
 <script src="lib/hanzi-writer.min.js"></script>
 <script>
@@ -484,7 +583,7 @@ const save = () => store.set("-done", done);
 let lv = 0, view = "trainer", gmode = "lessons", gi = 0, ci = 0, mode = "watch", writer = null;
 const pos = store.get("-pos", null);
 if (pos && META.levels[pos.lv]) { lv = pos.lv; gmode = pos.gm || gmode; gi = pos.g || 0; ci = pos.c || 0; }
-if (["rules", "pron"].includes(store.get("-view", "trainer"))) view = store.get("-view", "trainer");
+if (store.get("-view", "trainer") === "rules") view = "rules";
 $("autosay").checked = store.get("-autosay", true);
 $("autosay").onchange = e => store.set("-autosay", e.target.checked);
 
@@ -564,12 +663,6 @@ function renderLevels(){
   r.innerHTML = `Правила<small>для начинающих</small>`;
   r.onclick = () => { view = "rules"; update(); };
   n.appendChild(r);
-  const p = document.createElement("button");
-  p.className = "lv rules"; p.setAttribute("role", "tab"); p.id = "lv-pron";
-  p.setAttribute("aria-selected", view === "pron");
-  p.innerHTML = `Произношение<small>тренер</small>`;
-  p.onclick = () => { if (view !== "pron") pronFrom(lv, gmode, gi); view = "pron"; update(); };
-  n.appendChild(p);
   const total = Object.keys(IT).length, d = Object.keys(IT).filter(c => done[c]).length, cl = Object.keys(IT).filter(c => done[c] === "clean").length;
   $("progress").textContent = `Написано ${d} из ${total} · по памяти без ошибок ${cl}`;
 }
@@ -726,12 +819,14 @@ function startQuiz(){
 let reqId = 0;
 function update(fromPick){
   clampPos();
-  store.set("-pos", { lv, gm: gmode, g: gi, c: ci }); store.set("-view", view);
+  store.set("-pos", { lv, gm: gmode, g: gi, c: ci }); store.set("-view", view); store.set("-section", section);
   renderLevels();
-  $("trainer").hidden = view !== "trainer"; $("rules").hidden = view !== "rules"; $("pron").hidden = view !== "pron";
-  if (view !== "pron") pronStop();
+  $("hanzi").hidden = section !== "hanzi"; $("speech").hidden = section !== "speech";
+  document.querySelectorAll("#bnav button").forEach(b => b.setAttribute("aria-current", b.dataset.s === section ? "page" : "false"));
+  if (section === "speech") { if (voiceRun) voiceRun.stop(); renderSpeech(); return; }
+  speechStop();
+  $("trainer").hidden = view !== "trainer"; $("rules").hidden = view !== "rules";
   if (view === "rules") { buildRules(); return; }
-  if (view === "pron") { renderPron(); return; }
   renderPicker(); renderStrip();
   const c = curC(), my = ++reqId;
   loadAudio(lv).catch(() => {});
@@ -818,7 +913,7 @@ function showResults(){
 }
 function pick(c){
   const L = LOC[c]; if (!L) return;
-  view = "trainer"; lv = L.lv; gmode = L.gm; gi = L.g; ci = L.c;
+  section = "hanzi"; view = "trainer"; lv = L.lv; gmode = L.gm; gi = L.g; ci = L.c;
   $("q").value = ""; $("results").hidden = true; $("q").blur(); update(true);
   $("box").scrollIntoView({ block: "nearest", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
 }
@@ -1163,8 +1258,17 @@ async function practice(target, py){
   }
 }
 
-// ---- pronunciation trainer: read a lesson phrase aloud, the recognized text is compared syllable by syllable.
-// Characters → pinyin for what the service heard: pinyin-pro, loaded when the trainer is first used.
+// ---- section «Речь»: dialogues and key phrases of a lesson (data/speech-N.json), pronunciation trainer,
+// the learner's own dialogues (IndexedDB) and spaced repetition of everything passed.
+const SPEECH_IDS = [1]; // levels that have data/speech-N.json
+const SPEECH = {};
+function loadSpeech(l){
+  if (!SPEECH_IDS.includes(META.levels[l].id)) return Promise.resolve(null);
+  const k = "p" + l;
+  if (!loadingP[k]) loadingP[k] = loadJSON(`data/speech-${META.levels[l].id}.json`).then(d => (SPEECH[l] = d)).catch(e => { delete loadingP[k]; throw e; });
+  return loadingP[k];
+}
+// Characters → pinyin for what the service heard and for pasted dialogues: pinyin-pro, loaded on first use.
 let pyLib = null;
 function loadPinyin(){
   if (!pyLib) pyLib = new Promise((ok, no) => {
@@ -1175,78 +1279,40 @@ function loadPinyin(){
   });
   return pyLib;
 }
-let plv = 0, pgi = 0, pi = 0, pList = [], pRec = null, pTimer = 0;
+
+let section = store.get("-section", "hanzi") === "speech" ? "speech" : "hanzi";
+let stab = ["dlg", "phr", "pron", "mine"].includes(store.get("-stab", "")) ? store.get("-stab", "") : "dlg";
+// the trainer used to be a tab of the level bar
+if (store.get("-view", "") === "pron") { section = "speech"; stab = "pron"; }
+let plv = 0, pgi = 0, pi = 0, pList = [], review = null;
 const pSentFail = {};
 { const p = store.get("-pron", null); if (p && META.levels[p.lv]) { plv = p.lv; pgi = p.g || 0; pi = p.i || 0; } }
 const pGroups = l => META.levels[l].modes[levelModes(l)[0]];
-const pStatKey = (l, g) => `${META.levels[l].id}/${g}`;
-let pStats = store.get("-pronstat", {});
-const pStat = (l, g) => pStats[pStatKey(l, g)] || { ok: {}, err: {} };
-// open the trainer on the lesson that is open in the writing trainer
-function pronFrom(l, gm, g){
-  const G = gm === levelModes(l)[0] ? g : 0;
-  if (l !== plv || G !== pgi) { plv = l; pgi = G; pi = 0; }
-}
-// phrases of a lesson: its words (two characters and more), then the example sentences of its characters
-function pronPhrases(l, g){
-  const seen = new Set(), out = [];
-  const add = (z, p, r) => { const k = hanOf(z); if ([...k].length > 1 && p && !seen.has(k)) { seen.add(k); out.push({ z, p, r: r || "", k }); } };
-  const items = pGroups(l)[g].items;
-  items.forEach(c => { const it = IT[c]; if (it.lnp) { const [lw, lm] = it.ln.split(" — "); add(lw, it.lnp, lm); } add(it.w, it.wp, it.wm); });
-  items.forEach(c => (SENTS[c] || []).forEach(s => add(s.z, s.p, s.r)));
-  return out;
-}
-function pronStop(){
-  clearTimeout(pTimer);
-  if (pRec) { const r = pRec; pRec = null; try { r.abort(); } catch (e) {} }
-  $("pmic").classList.remove("on");
-}
-function pronMsg(t, bad, html){ const m = $("pmsg"); m[html ? "innerHTML" : "textContent"] = t; m.className = "pmsg" + (bad ? " bad" : ""); }
+const lessonShort = (l, g) => `${META.levels[l].name}, ${pGroups(l)[g].name.split(" · ")[0].toLowerCase()}`;
+const speechAt = (tab, l, g) => section === "speech" && !review && stab === tab && plv === l && pgi === g;
+const spMsg = t => { $("spmsg").textContent = t || ""; };
 
-function renderPron(){
-  plv = Math.min(Math.max(plv, 0), META.levels.length - 1);
-  const G = pGroups(plv); pgi = Math.min(Math.max(pgi, 0), G.length - 1);
-  const lsel = $("plv"); lsel.innerHTML = "";
-  META.levels.forEach((L, i) => { const o = document.createElement("option"); o.value = i; o.textContent = L.name; lsel.appendChild(o); });
-  lsel.value = plv;
-  const ready = SENTS_LOADED[plv] || pSentFail[plv];
-  const gsel = $("pgsel"); gsel.innerHTML = "";
-  G.forEach((g, i) => {
-    const o = document.createElement("option"); o.value = i; o.textContent = g.name;
-    if (ready) { const ph = pronPhrases(plv, i), ok = pStat(plv, i).ok; o.textContent += `  (${ph.filter(p => ok[p.k]).length}/${ph.length})`; }
-    gsel.appendChild(o);
-  });
-  gsel.value = pgi;
-  $("pgprev").disabled = pgi === 0; $("pgnext").disabled = pgi === G.length - 1;
-  const empty = t => { $("pbody").hidden = true; $("pempty").hidden = false; $("pempty").textContent = t; $("pcount").textContent = ""; $("pprev").disabled = $("pnextp").disabled = true; };
-  if (!ready) {
-    const l = plv;
-    pList = []; empty("Загружаю фразы…"); pronStats();
-    loadSentences(l).catch(() => { pSentFail[l] = true; }).then(() => { if (view === "pron" && plv === l) renderPron(); });
-    return;
-  }
-  pList = pronPhrases(plv, pgi);
-  pi = Math.min(Math.max(pi, 0), Math.max(pList.length - 1, 0));
-  store.set("-pron", { lv: plv, g: pgi, i: pi });
-  pronStats();
-  if (!pList.length) { empty(pSentFail[plv] ? "Не удалось загрузить фразы. Проверь интернет и открой урок ещё раз." : "В этом уроке пока нет фраз."); return; }
-  const ph = pList[pi];
-  $("pbody").hidden = false; $("pempty").hidden = true;
-  $("pz").textContent = ph.z; $("ppy").textContent = ph.p; $("pru").textContent = ph.r;
-  $("pcount").innerHTML = `${pi + 1} из ${pList.length}` + (pStat(plv, pgi).ok[ph.k] ? ` <span class="okmark" title="Фраза пройдена">✓</span>` : "");
-  $("pprev").disabled = pi === 0; $("pnextp").disabled = pi === pList.length - 1;
-  $("presult").hidden = true; $("ptext").value = ""; pronMsg("");
+// ---- speaking: one phrase at a time, with a callback when the voice has finished
+let sayCancel = null;
+function cancelSay(){ if (sayCancel) { const c = sayCancel; sayCancel = null; c(); } }
+function say(z){ cancelSay(); spMsg(tts(z, .85) ? "" : "На этом устройстве нет китайского голоса для озвучки."); }
+function sayThen(text, cb){
+  cancelSay();
+  let fired = false;
+  const go = () => { if (fired) return; fired = true; clearTimeout(t); sayCancel = null; cb(); };
+  // some phones never report the end of speech: move on by the clock
+  const t = setTimeout(go, 2500 + [...text].length * 700);
+  sayCancel = () => { fired = true; clearTimeout(t); try { speechSynthesis.cancel(); } catch (e) {} };
+  try {
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text); u.lang = "zh-CN"; u.rate = .85; if (zhVoice) u.voice = zhVoice;
+    u.onend = go;
+    u.onerror = e => { if (e.error === "interrupted" || e.error === "canceled") return; spMsg("Озвучка на этом устройстве не сработала — прочитай реплику сам."); go(); };
+    speechSynthesis.speak(u);
+  } catch (e) { clearTimeout(t); setTimeout(go, 400); }
 }
-function pronStats(){
-  const st = pStat(plv, pgi), n = pList.filter(p => st.ok[p.k]).length;
-  $("pdone").textContent = pList.length ? `Пройдено фраз: ${n} из ${pList.length}.` : "";
-  const top = Object.entries(st.err).sort((a, b) => b[1] - a[1]).slice(0, 5);
-  $("perrs").innerHTML = top.length
-    ? `<p>Чаще всего не совпадало:</p><ol>${top.map(([k, c]) => { const [w, g] = k.split(">"); return `<li><b>${c}×</b> ${esc(w)} — ${g ? `слышно как ${esc(g)}` : "не слышно"}</li>`; }).join("")}</ol>`
-    : `<p class="pmsg">${n ? "Ошибок в этом уроке пока нет." : "Прочитай фразу вслух — здесь появятся слоги, которые чаще всего не совпадают."}</p>`;
-}
-function pronGo(g, i){ pronStop(); pgi = g; pi = i; renderPron(); }
 
+// ---- comparison by syllables
 // toned syllable → base letters, tone, initial and final
 const PY_INIT = /^(zh|ch|sh|[bpmfdtnlgkhjqxrzcsyw])/;
 function pySplit(y){
@@ -1298,90 +1364,487 @@ function pronHints(syl){
   }
   return [...out].slice(0, 3);
 }
-// alts — recognition variants or typed text; lang — the recognition code, when it came from the microphone button
-async function pronCheck(alts, lang){
-  const ph = pList[pi]; if (!ph) return;
-  const han = [...new Set(alts.map(hanOf).filter(Boolean))];
-  if (!han.length) {
-    const raw = alts.join(" ").trim(), script = scriptOf(raw);
-    if (!raw) return;
-    if (!lang) { pronMsg("В ответе нет иероглифов. Переключи клавиатуру на китайскую (упрощённую) и продиктуй фразу ещё раз.", true); return; }
-    const next = ASR_LANGS[ASR_LANGS.indexOf(lang) + 1];
-    if (next) { setAsrLang(next); pronMsg(`Распознано «${esc(raw)}» — телефон ответил ${script === "cyr" ? "по-русски" : "не по-китайски"} на код ${lang}. Переключил на <b>${next}</b>: нажми микрофон и скажи ещё раз.`, true, true); }
-    else { setAsrLang(ASR_LANGS[0]); pronMsg(`Распознано «${esc(raw)}» (${lang}). ` + wrongLangHelp(script), true, true); }
+
+// ---- answer box: microphone button + a field for the keyboard's dictation, result by syllables.
+// One box is alive at a time (trainer, role play, review). ph: { z, p, k }; opt.onResult({ all, pct, syl, shown }).
+let ansRec = null, ansTimer = 0, ansSeq = 0;
+function answerStop(){
+  ansSeq++; clearTimeout(ansTimer);
+  if (ansRec) { const r = ansRec; ansRec = null; try { r.abort(); } catch (e) {} }
+}
+function answerBox(el, ph, opt = {}){
+  answerStop();
+  const my = ansSeq, live = () => my === ansSeq && el.isConnected;
+  el.innerHTML = `<div class="pans"><button class="btn primary pmic" type="button"${SR ? "" : " hidden"}>${MIC}<span>${opt.label || "Сказать фразу"}</span></button>`
+    + `<input class="ptext" type="text" lang="zh-CN" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="done" aria-label="Ответ голосовым вводом клавиатуры" placeholder="${SR ? "Или продиктуй" : "Продиктуй"} фразу сюда голосовым вводом клавиатуры"></div>`
+    + `<p class="pmsg" role="status"></p><div class="presult" hidden><p class="pscore"><b></b> <span></span></p><p class="pheard"></p><ol class="psyl"></ol><div class="phints"></div></div>`;
+  const q = s => el.querySelector(s), btn = q(".pmic"), inp = q(".ptext");
+  const msg = (t, bad, html) => { const m = q(".pmsg"); m[html ? "innerHTML" : "textContent"] = t; m.className = "pmsg" + (bad ? " bad" : ""); };
+  // alts — recognition variants or typed text; lang — the recognition code, when it came from the microphone button
+  async function check(alts, lang){
+    const han = [...new Set(alts.map(hanOf).filter(Boolean))];
+    if (!han.length) {
+      const raw = alts.join(" ").trim(), script = scriptOf(raw);
+      if (!raw) return;
+      if (!lang) { msg("В ответе нет иероглифов. Переключи клавиатуру на китайскую (упрощённую) и продиктуй фразу ещё раз.", true); return; }
+      const next = ASR_LANGS[ASR_LANGS.indexOf(lang) + 1];
+      if (next) { setAsrLang(next); msg(`Распознано «${esc(raw)}» — телефон ответил ${script === "cyr" ? "по-русски" : "не по-китайски"} на код ${lang}. Переключил на <b>${next}</b>: нажми микрофон и скажи ещё раз.`, true, true); }
+      else { setAsrLang(ASR_LANGS[0]); msg(`Распознано «${esc(raw)}» (${lang}). ` + wrongLangHelp(script), true, true); }
+      return;
+    }
+    if (lang && lang !== ASR_LANGS[0]) setAsrLang(lang); // this code works here — keep it
+    let lib;
+    try { lib = await loadPinyin(); } catch (e) { if (live()) msg("Не удалось загрузить словарь пиньиня. Проверь интернет и попробуй ещё раз.", true); return; }
+    if (!live()) return;
+    const res = han.map(h => pronCompare(ph.k, h, lib)).sort((x, y) => y.score - x.score)[0];
+    const pct = Math.round(res.score * 100), all = res.syl.every(o => o.st === "ok");
+    // pinyin as written in the lesson, when it splits into one syllable per character
+    const own = syllables(ph.p || ""), shown = own.length === res.syl.length ? own.map(s => s.syl.toLowerCase()) : res.syl.map(o => o.want.y);
+    msg("");
+    q(".pscore b").textContent = pct + "%";
+    q(".pscore").className = "pscore" + (all ? " good" : pct < 60 ? " bad" : "");
+    q(".pscore span").textContent = all ? "Всё совпало." : pct >= 80 ? "Почти: проверь выделенные слоги." : "Пока не совпало — послушай фразу и попробуй ещё раз.";
+    q(".pheard").innerHTML = `Распознано: <span class="han" lang="zh-CN">${esc(res.heard)}</span>`;
+    q(".psyl").innerHTML = res.syl.map((o, i) => `<li class="${o.st === "ok" ? "ok" : o.st === "miss" ? "skip" : "bad"}"><span class="h" lang="zh-CN">${esc(o.h)}</span><span class="y">${esc(shown[i])}</span>`
+      + `<span class="v">${o.st === "ok" ? "✓" : o.st === "miss" ? "не слышно" : o.st === "tone" ? `тон: слышно ${esc(o.got.y)}` : `слышно ${esc(o.gotH)} ${esc(o.got.y)}`}</span></li>`).join("");
+    q(".phints").innerHTML = pronHints(res.syl).map(h => `<p>${esc(h)}</p>`).join("");
+    q(".presult").hidden = false;
+    if (opt.onResult) opt.onResult({ all, pct, syl: res.syl, shown });
+  }
+  // quiet: started by the app, not by a tap — a refusal to start is not an error to show
+  function listen(quiet){
+    if (ansRec) { try { ansRec.stop(); } catch (e) {} return; }
+    if (!SR) return;
+    cancelSay();
+    const lang = asrLang, rec = ansRec = recognizer(5, lang);
+    let got = false;
+    btn.classList.add("on"); msg(`Слушаю… Язык распознавания: ${lang}.`);
+    rec.onresult = e => { got = true; if (live()) check([...e.results[0]].map(a => a.transcript || ""), lang); };
+    rec.onerror = e => { if (e.error !== "aborted" && live()) { got = true; msg(micError(e), true); } };
+    rec.onend = () => {
+      clearTimeout(guard); btn.classList.remove("on");
+      if (ansRec === rec) ansRec = null;
+      if (!got && live()) msg("Ничего не услышал — проверь интернет и микрофон и попробуй ещё раз.", true);
+    };
+    // some browsers never end the session without network: give up after 15 s
+    const guard = setTimeout(() => { try { rec.abort(); } catch (e) {} }, 15000);
+    try { rec.start(); } catch (e) { clearTimeout(guard); ansRec = null; btn.classList.remove("on"); msg(quiet ? "" : micError(e), !quiet); }
+  }
+  btn.onclick = () => listen();
+  // keyboard dictation fills the field by itself: check on Enter or when the text stops changing
+  const typed = () => { clearTimeout(ansTimer); const t = inp.value.trim(); if (t) check([t]); };
+  inp.addEventListener("keydown", e => { if (e.key === "Enter" && !e.isComposing) { e.preventDefault(); typed(); } });
+  inp.addEventListener("input", e => { clearTimeout(ansTimer); if (!e.isComposing && hanOf(inp.value)) ansTimer = setTimeout(typed, 1500); });
+  return { listen, check, reset(){ q(".presult").hidden = true; inp.value = ""; msg(""); }, focus(){ inp.focus(); } };
+}
+
+// ---- the screen
+let roleStop = null;
+function speechStop(){ answerStop(); if (roleStop) roleStop(); cancelSay(); }
+function renderSpeech(){
+  plv = Math.min(Math.max(plv, 0), META.levels.length - 1);
+  const G = pGroups(plv); pgi = Math.min(Math.max(pgi, 0), G.length - 1);
+  const lsel = $("plv"); lsel.innerHTML = "";
+  META.levels.forEach((L, i) => { const o = document.createElement("option"); o.value = i; o.textContent = L.name; lsel.appendChild(o); });
+  lsel.value = plv;
+  const gsel = $("pgsel"); gsel.innerHTML = "";
+  G.forEach((g, i) => { const o = document.createElement("option"); o.value = i; o.textContent = g.name; gsel.appendChild(o); });
+  gsel.value = pgi;
+  $("pgprev").disabled = pgi === 0; $("pgnext").disabled = pgi === G.length - 1;
+  store.set("-pron", { lv: plv, g: pgi, i: pi }); store.set("-stab", stab);
+  renderReach(); spMsg("");
+  $("spmain").hidden = !!review; $("sp-review").hidden = !review;
+  if (review) { renderReview(); return; }
+  document.querySelectorAll("#stabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.t === stab));
+  ["dlg", "phr", "pron", "mine"].forEach(t => { $("sp-" + t).hidden = t !== stab; });
+  ({ dlg: renderDialogs, phr: renderPatterns, pron: renderPron, mine: renderMine })[stab]();
+}
+function speechGo(g, i){ speechStop(); review = null; pgi = g; pi = i; renderSpeech(); }
+$("plv").onchange = e => { plv = +e.target.value; speechGo(0, 0); };
+$("pgsel").onchange = e => speechGo(+e.target.value, 0);
+$("pgprev").onclick = () => speechGo(pgi - 1, 0);
+$("pgnext").onclick = () => speechGo(pgi + 1, 0);
+document.querySelectorAll("#stabs button").forEach(b => b.onclick = () => { speechStop(); stab = b.dataset.t; renderSpeech(); });
+const spHide = store.get("-sphide", { py: false, ru: false });
+function setSpHide(){
+  $("speech").classList.toggle("nopy", !!spHide.py); $("speech").classList.toggle("noru", !!spHide.ru);
+  $("hidepy").setAttribute("aria-pressed", !!spHide.py); $("hidepy").textContent = spHide.py ? "Показать пиньинь" : "Скрыть пиньинь";
+  $("hideru").setAttribute("aria-pressed", !!spHide.ru); $("hideru").textContent = spHide.ru ? "Показать перевод" : "Скрыть перевод";
+}
+setSpHide();
+$("hidepy").onclick = () => { spHide.py = !spHide.py; store.set("-sphide", spHide); setSpHide(); };
+$("hideru").onclick = () => { spHide.ru = !spHide.ru; store.set("-sphide", spHide); setSpHide(); };
+
+// ---- dialogues and phrase patterns of the lesson
+const note = t => `<section class="card"><p class="empty" style="padding:0">${t}</p></section>`;
+const lineHTML = (z, p, r) => `<div><div class="dz" lang="zh-CN">${esc(z)}</div><div class="ppy">${esc(p || "")}</div><div class="pru">${esc(r || "")}</div></div><button class="speak sm" type="button" aria-label="Послушать">${ICON}</button>`;
+// runs draw(lesson) when the level's speech file is there; otherwise explains why the pane is empty
+function speechLesson(tab, draw){
+  const box = $("sp-" + tab), l = plv, g = pgi, L = META.levels[l];
+  if (!SPEECH_IDS.includes(L.id)) { box.innerHTML = note(`Для ${L.name} диалоги и фразы пока не написаны. Здесь работают «Произношение» и «Мои диалоги» — можно вставить диалог из своего учебника.`); return; }
+  if (!SPEECH[l]) {
+    box.innerHTML = note("Загружаю…");
+    loadSpeech(l).then(() => { if (speechAt(tab, l, g)) renderSpeech(); }).catch(() => { if (speechAt(tab, l, g)) box.innerHTML = note("Не удалось загрузить. Проверь интернет и открой урок ещё раз."); });
     return;
   }
-  if (lang && lang !== ASR_LANGS[0]) setAsrLang(lang); // this code works here — keep it
-  let lib;
-  try { lib = await loadPinyin(); } catch (e) { pronMsg("Не удалось загрузить словарь пиньиня. Проверь интернет и попробуй ещё раз.", true); return; }
-  if (pList[pi] !== ph || view !== "pron") return;
-  const res = han.map(h => pronCompare(ph.k, h, lib)).sort((x, y) => y.score - x.score)[0];
-  const pct = Math.round(res.score * 100), all = res.syl.every(o => o.st === "ok");
-  // pinyin as written in the lesson, when it splits into one syllable per character
-  const own = syllables(ph.p), shown = own.length === res.syl.length ? own.map(s => s.syl.toLowerCase()) : res.syl.map(o => o.want.y);
-  const st = pStats[pStatKey(plv, pgi)] = pStat(plv, pgi);
-  if (all) st.ok[ph.k] = 1;
-  res.syl.forEach((o, i) => { if (o.st !== "ok") { const k = `${shown[i]}>${o.got ? o.got.y : ""}`; st.err[k] = (st.err[k] || 0) + 1; } });
-  store.set("-pronstat", pStats);
-  pronMsg("");
-  $("ppct").textContent = pct + "%";
-  $("ppct").parentNode.className = "pscore" + (all ? " good" : pct < 60 ? " bad" : "");
-  $("pverdict").textContent = all ? "Всё совпало." : pct >= 80 ? "Почти: проверь выделенные слоги." : "Пока не совпало — послушай фразу и попробуй ещё раз.";
-  $("pheard").innerHTML = `Распознано: <span class="han" lang="zh-CN">${esc(res.heard)}</span>`;
-  $("psyl").innerHTML = res.syl.map((o, i) => `<li class="${o.st === "ok" ? "ok" : o.st === "miss" ? "skip" : "bad"}"><span class="h" lang="zh-CN">${esc(o.h)}</span><span class="y">${esc(shown[i])}</span>`
-    + `<span class="v">${o.st === "ok" ? "✓" : o.st === "miss" ? "не слышно" : o.st === "tone" ? `тон: слышно ${esc(o.got.y)}` : `слышно ${esc(o.gotH)} ${esc(o.got.y)}`}</span></li>`).join("");
-  $("phints").innerHTML = pronHints(res.syl).map(h => `<p>${esc(h)}</p>`).join("");
-  $("presult").hidden = false;
-  if (all) { const ok = $("pcount").querySelector(".okmark"); if (!ok) $("pcount").insertAdjacentHTML("beforeend", ` <span class="okmark" title="Фраза пройдена">✓</span>`); }
-  const o = $("pgsel").options[pgi]; if (o) o.textContent = `${pGroups(plv)[pgi].name}  (${pList.filter(p => st.ok[p.k]).length}/${pList.length})`;
-  pronStats();
+  const lesson = SPEECH[l][g];
+  if (!lesson) { box.innerHTML = note("В этой группе нет диалогов и фраз: она вне уроков учебника."); return; }
+  box.innerHTML = ""; draw(box, lesson);
 }
-function pronListen(){
-  if (pRec) { try { pRec.stop(); } catch (e) {} return; }
-  try { speechSynthesis.cancel(); } catch (e) {}
-  const lang = asrLang, rec = pRec = recognizer(5, lang), btn = $("pmic");
-  let got = false;
-  btn.classList.add("on"); pronMsg(`Слушаю… прочитай фразу вслух. Язык распознавания: ${lang}.`);
-  rec.onresult = e => { got = true; pronCheck([...e.results[0]].map(a => a.transcript || ""), lang); };
-  rec.onerror = e => { if (e.error !== "aborted") { got = true; pronMsg(micError(e), true); } };
-  rec.onend = () => {
-    clearTimeout(guard); btn.classList.remove("on");
-    if (pRec !== rec) return;
-    pRec = null;
-    if (!got) pronMsg("Ничего не услышал — проверь интернет и микрофон и попробуй ещё раз.", true);
+function dialogCard(d, extra){
+  const roles = [...new Set(d.l.map(x => x[0]))], me = roles[1] || roles[0];
+  const sec = document.createElement("section"); sec.className = "card dlg";
+  sec.innerHTML = `<div class="dhead"><h2>${esc(d.t)}</h2><div class="row">${extra || ""}<button class="chip role" type="button">Я — ${esc(me)}</button></div></div>`
+    + `<ol class="dlines">${d.l.map(([r, z, p, t]) => `<li><span class="who${r === me ? " me" : ""}">${esc(r)}</span>${lineHTML(z, p, t)}</li>`).join("")}</ol><div class="drole" hidden></div>`;
+  sec.querySelectorAll(".dlines .speak").forEach((b, i) => { b.onclick = () => say(d.l[i][1]); });
+  sec.querySelector(".role").onclick = () => sec.classList.contains("playing") ? roleStop() : rolePlay(sec, d, me);
+  return sec;
+}
+function renderDialogs(){
+  speechLesson("dlg", (box, L) => L.d.forEach(d => box.appendChild(dialogCard(d))));
+}
+function renderPatterns(){
+  speechLesson("phr", (box, L) => {
+    box.insertAdjacentHTML("beforeend", `<p class="pmsg">Работайте в паре: один спрашивает, другой отвечает любым вариантом, потом меняйтесь. Слова из строки «Подставь» ставьте на место выделенного.</p>`);
+    L.f.forEach(f => {
+      const sec = document.createElement("section"); sec.className = "card pat";
+      const mark = z => f.r && z.includes(f.r) ? esc(z).replace(esc(f.r), `<u>${esc(f.r)}</u>`) : esc(z);
+      const row = x => lineHTML(...x).replace(esc(x[0]), mark(x[0]));
+      sec.innerHTML = `<h2 class="sub">${esc(f.t)}</h2><div class="pl">${row(f.q)}</div><ul>${f.a.map(a => `<li class="pl">${row(a)}</li>`).join("")}</ul>`
+        + (f.s ? `<p class="subs">Подставь вместо <span class="han" lang="zh-CN">${esc(f.r)}</span>:${f.s.map(s => `<span class="sw"><span class="han" lang="zh-CN">${esc(s[0])}</span> <span class="ppy">${esc(s[1])}</span> <span class="pru">— ${esc(s[2])}</span></span>`).join("")}</p>` : "");
+      const all = [f.q, ...f.a];
+      sec.querySelectorAll(".speak").forEach((b, i) => { b.onclick = () => say(all[i][0]); });
+      box.appendChild(sec);
+    });
+  });
+}
+// «Я — B»: the app speaks the other role and waits for the learner's lines
+function rolePlay(sec, d, me){
+  speechStop();
+  const lis = [...sec.querySelectorAll(".dlines li")], box = sec.querySelector(".drole"), roleBtn = sec.querySelector(".role");
+  let i = -1, alive = true, okN = 0, myN = 0;
+  const mark = () => lis.forEach((li, k) => li.classList.toggle("cur", k === i));
+  const stop = () => {
+    if (!alive) return;
+    alive = false; roleStop = null; answerStop(); cancelSay();
+    i = -1; mark(); box.hidden = true; box.innerHTML = ""; sec.classList.remove("playing"); roleBtn.textContent = `Я — ${me}`;
   };
-  // some browsers never end the session without network: give up after 15 s
-  const guard = setTimeout(() => { try { rec.abort(); } catch (e) {} }, 15000);
-  try { rec.start(); } catch (e) { clearTimeout(guard); pRec = null; btn.classList.remove("on"); pronMsg(micError(e), true); }
+  roleStop = stop; sec.classList.add("playing"); roleBtn.textContent = "Остановить"; box.hidden = false;
+  const next = () => {
+    if (!alive) return;
+    answerStop(); i++; mark();
+    if (i >= d.l.length) {
+      box.innerHTML = `<p class="pmsg good">Диалог пройден. Твоих реплик без ошибок: ${okN} из ${myN}.</p><div class="actions"><button class="btn again" type="button">Ещё раз</button><button class="btn primary fin" type="button">Готово</button></div>`;
+      box.querySelector(".again").onclick = () => { stop(); rolePlay(sec, d, me); };
+      box.querySelector(".fin").onclick = stop;
+      return;
+    }
+    const [r, z, p] = d.l[i];
+    if (r !== me || !hanOf(z)) {
+      box.innerHTML = `<p class="pmsg">Говорит ${esc(r)} — слушай.</p>`;
+      sayThen(z, () => setTimeout(next, 350));
+      return;
+    }
+    myN++; let counted = false;
+    box.innerHTML = `<p class="pmsg">Твоя реплика (${esc(me)}): прочитай её вслух.</p><div class="abox"></div><div class="actions"><button class="btn go" type="button">Пропустить</button></div>`;
+    const go = box.querySelector(".go"); go.onclick = next;
+    const ab = answerBox(box.querySelector(".abox"), { z, p, k: hanOf(z) }, { label: "Сказать реплику", onResult: res => {
+      if (res.all && !counted) { counted = true; okN++; }
+      go.textContent = "Дальше"; go.classList.toggle("primary", res.all);
+    } });
+    // after the partner's line the microphone opens by itself
+    if (i > 0) ab.listen(true);
+    box.scrollIntoView({ block: "nearest" });
+  };
+  next();
 }
-$("plv").onchange = e => { plv = +e.target.value; pronGo(0, 0); };
-$("pgsel").onchange = e => pronGo(+e.target.value, 0);
-$("pgprev").onclick = () => pronGo(pgi - 1, 0);
-$("pgnext").onclick = () => pronGo(pgi + 1, 0);
-$("pprev").onclick = () => pronGo(pgi, pi - 1);
-$("pnextp").onclick = () => pronGo(pgi, pi + 1);
-$("pnext").onclick = () => { if (pi < pList.length - 1) pronGo(pgi, pi + 1); else if (pgi < pGroups(plv).length - 1) pronGo(pgi + 1, 0); else pronGo(pgi, pi); };
-$("pagain").onclick = () => { $("presult").hidden = true; $("ptext").value = ""; if (SR) pronListen(); else $("ptext").focus(); };
-$("psay").innerHTML = ICON;
-$("psay").onclick = () => { const ph = pList[pi]; if (ph && !tts(ph.z, .85)) pronMsg("На этом устройстве нет китайского голоса для озвучки.", true); };
-$("pmic").innerHTML = MIC + "<span>Сказать фразу</span>"; $("pmic").hidden = !SR; $("pmic").onclick = pronListen;
-if (!SR) $("ptext").placeholder = "Продиктуй фразу сюда голосовым вводом клавиатуры";
-// keyboard dictation fills the field by itself: check on Enter or when the text stops changing
-const pronTyped = () => { clearTimeout(pTimer); const t = $("ptext").value.trim(); if (t) pronCheck([t]); };
-$("ptext").addEventListener("keydown", e => { if (e.key === "Enter" && !e.isComposing) { e.preventDefault(); pronTyped(); } });
-$("ptext").addEventListener("input", e => { clearTimeout(pTimer); if (!e.isComposing && hanOf($("ptext").value)) pTimer = setTimeout(pronTyped, 1500); });
-function setPronHide(on){
-  document.querySelector(".pcard").classList.toggle("hide", on);
-  $("phide").setAttribute("aria-pressed", on);
-  $("phide").textContent = on ? "Показать пиньинь и перевод" : "Скрыть пиньинь и перевод";
-}
-setPronHide(store.get("-pronhide", false));
-$("phide").onclick = () => { const on = !document.querySelector(".pcard").classList.contains("hide"); store.set("-pronhide", on); setPronHide(on); };
 
-// ---- offline (PWA). DATA_CACHE / SENT_CACHE must match DATA / SENT in sw.js
+// ---- pronunciation trainer: the lesson's words and example sentences, one by one
+const pStatKey = (l, g) => `${META.levels[l].id}/${g}`;
+let pStats = store.get("-pronstat", {});
+const pStat = (l, g) => pStats[pStatKey(l, g)] || { ok: {}, err: {} };
+// phrases of a lesson: its words (two characters and more), then the example sentences of its characters
+function pronPhrases(l, g){
+  const seen = new Set(), out = [];
+  const add = (z, p, r) => { const k = hanOf(z); if ([...k].length > 1 && p && !seen.has(k)) { seen.add(k); out.push({ z, p, r: r || "", k }); } };
+  const items = pGroups(l)[g].items;
+  items.forEach(c => { const it = IT[c]; if (it.lnp) { const [lw, lm] = it.ln.split(" — "); add(lw, it.lnp, lm); } add(it.w, it.wp, it.wm); });
+  items.forEach(c => (SENTS[c] || []).forEach(s => add(s.z, s.p, s.r)));
+  return out;
+}
+let pronBox = null;
+function renderPron(){
+  const empty = t => { $("pbody").hidden = true; $("pempty").hidden = false; $("pempty").textContent = t; $("pcount").textContent = ""; $("pprev").disabled = $("pnextp").disabled = true; };
+  if (!SENTS_LOADED[plv] && !pSentFail[plv]) {
+    const l = plv, g = pgi;
+    pList = []; empty("Загружаю фразы…"); pronStats();
+    loadSentences(l).catch(() => { pSentFail[l] = true; }).then(() => { if (speechAt("pron", l, g)) renderPron(); });
+    return;
+  }
+  pList = pronPhrases(plv, pgi);
+  pi = Math.min(Math.max(pi, 0), Math.max(pList.length - 1, 0));
+  store.set("-pron", { lv: plv, g: pgi, i: pi });
+  pronStats();
+  if (!pList.length) { empty(pSentFail[plv] ? "Не удалось загрузить фразы. Проверь интернет и открой урок ещё раз." : "В этом уроке пока нет фраз."); return; }
+  const ph = pList[pi];
+  $("pbody").hidden = false; $("pempty").hidden = true; $("pact").hidden = true;
+  $("pz").textContent = ph.z; $("ppy").textContent = ph.p; $("pru").textContent = ph.r;
+  const okMark = () => { $("pcount").innerHTML = `${pi + 1} из ${pList.length}` + (pStat(plv, pgi).ok[ph.k] ? ` <span class="okmark" title="Фраза пройдена">✓</span>` : ""); };
+  okMark();
+  $("pprev").disabled = pi === 0; $("pnextp").disabled = pi === pList.length - 1;
+  pronBox = answerBox($("pans"), ph, { onResult: res => {
+    const st = pStats[pStatKey(plv, pgi)] = pStat(plv, pgi);
+    if (res.all) st.ok[ph.k] = 1;
+    res.syl.forEach((o, i) => { if (o.st !== "ok") { const k = `${res.shown[i]}>${o.got ? o.got.y : ""}`; st.err[k] = (st.err[k] || 0) + 1; } });
+    store.set("-pronstat", pStats);
+    $("pact").hidden = false; okMark(); pronStats();
+  } });
+}
+function pronStats(){
+  const st = pStat(plv, pgi), n = pList.filter(p => st.ok[p.k]).length;
+  $("pdone").textContent = pList.length ? `Пройдено фраз: ${n} из ${pList.length}.` : "";
+  const top = Object.entries(st.err).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  $("perrs").innerHTML = top.length
+    ? `<p>Чаще всего не совпадало:</p><ol>${top.map(([k, c]) => { const [w, g] = k.split(">"); return `<li><b>${c}×</b> ${esc(w)} — ${g ? `слышно как ${esc(g)}` : "не слышно"}</li>`; }).join("")}</ol>`
+    : `<p class="pmsg">${n ? "Ошибок в этом уроке пока нет." : "Прочитай фразу вслух — здесь появятся слоги, которые чаще всего не совпадают."}</p>`;
+}
+const pronTo = i => { speechStop(); pi = i; renderPron(); };
+$("pprev").onclick = () => pronTo(pi - 1);
+$("pnextp").onclick = () => pronTo(pi + 1);
+$("pnext").onclick = () => { if (pi < pList.length - 1) pronTo(pi + 1); else if (pgi < pGroups(plv).length - 1) speechGo(pgi + 1, 0); else pronTo(pi); };
+$("pagain").onclick = () => { $("pact").hidden = true; if (pronBox) { pronBox.reset(); if (SR) pronBox.listen(); else pronBox.focus(); } };
+$("psay").innerHTML = ICON;
+$("psay").onclick = () => { const ph = pList[pi]; if (ph) say(ph.z); };
+
+// ---- my dialogues: pasted by the learner, kept in IndexedDB on this device only
+const idbDo = (mode, fn) => new Promise((ok, no) => {
+  let rq;
+  try { rq = indexedDB.open("propisi-speech", 1); } catch (e) { no(e); return; }
+  rq.onupgradeneeded = () => rq.result.createObjectStore("dialogs", { keyPath: "id", autoIncrement: true });
+  rq.onerror = () => no(rq.error);
+  rq.onsuccess = () => {
+    const db = rq.result, tx = db.transaction("dialogs", mode), r = fn(tx.objectStore("dialogs"));
+    tx.oncomplete = () => { db.close(); ok(r && r.result); };
+    tx.onerror = tx.onabort = () => { db.close(); no(tx.error); };
+  };
+});
+const mineAll = () => idbDo("readonly", s => s.getAll());
+const ZH_PM = { "，": ",", "。": ".", "？": "?", "！": "!", "、": ",", "：": ":", "；": ";", "“": " \"", "”": "\"", "（": " (", "）": ")", "《": " «", "》": "»" };
+// pinyin for pasted text: syllable by syllable (word boundaries are not known here)
+function autoPinyin(z, lib){
+  let out = "";
+  for (const x of lib.pinyin(z, { type: "all", toneType: "symbol" })) out += x.isZh ? (out && !/[ "«(]$/.test(out) ? " " : "") + x.pinyin : (ZH_PM[x.origin] ?? x.origin);
+  out = out.replace(/\s+([,.?!:;»)])/g, "$1").replace(/\s+/g, " ").trim();
+  return out.replace(/(^|[.?!]\s+)(\p{Ll})/gu, (m, a, b) => a + b.toUpperCase());
+}
+// a line per reply: "A: 你好！", optionally with pinyin / translation on the same or on the next lines
+function parseDialog(text, lib){
+  const lines = [];
+  for (const raw of text.split(/\r?\n/)) {
+    let s = raw.trim(); if (!s) continue;
+    const last = lines[lines.length - 1];
+    if (!hanOf(s)) {
+      if (!last) continue;
+      s = s.replace(/^[A-Za-zА-Яа-яЁё]{1,2}\s*[:：.)]\s*/, "");
+      if (/[А-Яа-яЁё]/.test(s)) last.t = last.t ? last.t + " " + s : s; else if (/\p{L}/u.test(s) && !last.p) last.p = s;
+      continue;
+    }
+    let r = "";
+    const m = s.match(/^([A-Za-zА-Яа-яЁё\p{Script=Han}]{1,6})\s*[:：]\s*(.*\p{Script=Han}.*)$/u);
+    if (m) { r = m[1]; s = m[2]; }
+    const ch = [...s];
+    let a = ch.findIndex(c => /[\p{Script=Han}“「《（]/u.test(c)), b = ch.length - 1;
+    while (b > a && !/\p{Script=Han}/u.test(ch[b])) b--;
+    while (b + 1 < ch.length && /[。？！，、…”」》）?!.]/u.test(ch[b + 1])) b++;
+    const z = ch.slice(a, b + 1).join("").replace(/[A-Za-zÀ-ɏ̀-ͯ]+/g, "").replace(/[(（]\s*[)）]/g, "").replace(/\s+/g, "");
+    const tail = ch.slice(b + 1).join("").replace(/^[\s—–\-|/]+/, "").trim();
+    const line = { r, z, p: "", t: "" };
+    if (/[А-Яа-яЁё]/.test(tail)) line.t = tail; else if (/\p{L}/u.test(tail)) line.p = tail;
+    lines.push(line);
+  }
+  const named = lines.some(x => x.r);
+  lines.forEach((x, i) => { if (!x.r) x.r = named ? (i ? lines[i - 1].r : "A") : "AB"[i % 2]; if (!x.p) x.p = autoPinyin(x.z, lib); });
+  return lines;
+}
+const mMsg = (t, cls) => { $("mmsg").textContent = t; $("mmsg").className = "pmsg" + (cls ? " " + cls : ""); };
+async function renderMine(){
+  const list = $("minelist"), l = plv, g = pgi;
+  let all;
+  try { all = await mineAll(); } catch (e) { list.innerHTML = note("Хранилище IndexedDB в этом браузере недоступно (так бывает в приватном режиме) — свои диалоги сохранить некуда."); $("mcount").textContent = ""; return; }
+  if (!speechAt("mine", l, g)) return;
+  const here = all.filter(d => d.lv === META.levels[l].id && d.g === g);
+  list.innerHTML = here.length ? "" : note("К этому уроку своих диалогов пока нет.");
+  here.forEach(d => {
+    const sec = dialogCard({ t: d.title, l: d.lines.map(x => [x.r, x.z, x.p, x.t]) }, `<button class="chip del" type="button">Удалить</button>`);
+    const del = sec.querySelector(".del");
+    // two taps instead of a system dialog
+    del.onclick = async () => {
+      if (!del.dataset.sure) { del.dataset.sure = 1; del.textContent = "Точно удалить?"; del.classList.add("go"); setTimeout(() => { if (del.isConnected) { delete del.dataset.sure; del.textContent = "Удалить"; del.classList.remove("go"); } }, 4000); return; }
+      speechStop();
+      try { await idbDo("readwrite", s => s.delete(d.id)); } catch (e) { mMsg("Не получилось удалить.", "bad"); }
+      renderMine();
+    };
+    list.appendChild(sec);
+  });
+  $("mcount").textContent = `Своих диалогов на этом устройстве: ${all.length}` + (all.length ? `, из них к этому уроку: ${here.length}.` : ".");
+  $("mexport").disabled = !all.length;
+}
+$("madd").onclick = async () => {
+  const text = $("mtext").value;
+  if (!hanOf(text)) { mMsg("Вставь текст диалога с иероглифами.", "bad"); return; }
+  let lib;
+  try { lib = await loadPinyin(); } catch (e) { mMsg("Не удалось загрузить словарь пиньиня. Проверь интернет и попробуй ещё раз.", "bad"); return; }
+  const lines = parseDialog(text, lib);
+  try {
+    const n = (await mineAll()).length;
+    await idbDo("readwrite", s => s.add({ lv: META.levels[plv].id, g: pgi, title: $("mtitle").value.trim() || `Мой диалог ${n + 1}`, lines, at: Date.now() }));
+  } catch (e) { mMsg("Не получилось сохранить: хранилище браузера недоступно или переполнено.", "bad"); return; }
+  $("mtext").value = ""; $("mtitle").value = "";
+  mMsg(`Добавлено реплик: ${lines.length}. Проверь пиньинь: он расставлен автоматически, по слогам.`, "good");
+  renderMine();
+};
+$("mexport").onclick = async () => {
+  let all;
+  try { all = await mineAll(); } catch (e) { mMsg("Хранилище недоступно.", "bad"); return; }
+  const data = { app: "propisi-hsk", kind: "dialogs", version: 1, dialogs: all.map(({ id, ...d }) => d) };
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 1)], { type: "application/json" }));
+  a.download = `propisi-dialogi-${new Date().toISOString().slice(0, 10)}.json`;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+  mMsg(`Сохранено диалогов: ${all.length}. Файл — в загрузках.`, "good");
+};
+$("mimport").onclick = () => $("mfile").click();
+$("mfile").onchange = async e => {
+  const file = e.target.files[0]; e.target.value = "";
+  if (!file) return;
+  try {
+    const data = JSON.parse(await file.text());
+    const str = v => typeof v === "string" ? v.slice(0, 2000) : "";
+    const list = (Array.isArray(data) ? data : data.dialogs || []).filter(d => d && Array.isArray(d.lines)).map(d => ({
+      lv: META.levels.some(L => L.id === d.lv) ? d.lv : META.levels[plv].id, g: Number.isInteger(d.g) && d.g >= 0 ? d.g : pgi,
+      title: str(d.title) || "Мой диалог", at: +d.at || Date.now(),
+      lines: d.lines.filter(x => x && hanOf(str(x.z))).map(x => ({ r: str(x.r).slice(0, 12) || "A", z: str(x.z), p: str(x.p), t: str(x.t) })),
+    })).filter(d => d.lines.length);
+    if (!list.length) { mMsg("В файле нет диалогов этого приложения.", "bad"); return; }
+    const sig = d => `${d.lv}/${d.g}/${d.title}/${d.lines.map(x => x.z).join("")}`, have = new Set((await mineAll()).map(sig));
+    const fresh = list.filter(d => !have.has(sig(d)) && have.add(sig(d)));
+    if (fresh.length) await idbDo("readwrite", s => { let r; fresh.forEach(d => { r = s.add(d); }); return r; });
+    mMsg(`Добавлено диалогов: ${fresh.length}` + (list.length - fresh.length ? `, уже были: ${list.length - fresh.length}.` : "."), "good");
+    renderMine();
+  } catch (err) { mMsg("Не получилось прочитать файл: это должен быть файл экспорта «Прописей».", "bad"); }
+};
+
+// ---- repetition of everything passed: 10 phrases, wrong → tomorrow, right → in 3, 7, 14 days
+const SRS_DAYS = [3, 7, 14];
+const today = () => Math.floor((Date.now() - new Date().getTimezoneOffset() * 6e4) / 864e5);
+let srs = store.get("-srs", {}), reach = store.get("-reach", null), reachSeq = 0;
+if (reach && !(META.levels[reach.lv] && pGroups(reach.lv)[reach.g])) reach = null;
+const days = n => n <= 1 ? "завтра" : `через ${n} ${n % 10 === 1 && n % 100 !== 11 ? "день" : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 > 20) ? "дня" : "дней"}`;
+function srsGrade(k, ok, prev){
+  const n = prev ? prev.n : 0;
+  srs[k] = ok ? { n: Math.min(n + 1, SRS_DAYS.length), d: today() + SRS_DAYS[Math.min(n, SRS_DAYS.length - 1)] } : { n: 0, d: today() + 1 };
+  store.set("-srs", srs);
+  return srs[k].d - today();
+}
+// lines of the dialogues and phrase patterns up to the marked lesson; levels without them give the trainer's phrases
+async function reviewPool(){
+  if (!reach) return [];
+  const out = [], seen = new Set();
+  const add = (z, p, r) => { const k = hanOf(z); if ([...k].length > 1 && !seen.has(k)) { seen.add(k); out.push({ z, p, r: r || "", k }); } };
+  for (let l = 0; l <= reach.lv; l++) {
+    const last = l < reach.lv ? pGroups(l).length - 1 : reach.g;
+    let sp = null;
+    try { sp = await loadSpeech(l); } catch (e) {}
+    if (!sp) { try { await loadSentences(l); } catch (e) {} }
+    for (let g = 0; g <= last; g++) {
+      const L = sp && sp[g];
+      if (L) { L.d.forEach(d => d.l.forEach(x => add(x[1], x[2], x[3]))); L.f.forEach(f => [f.q, ...f.a].forEach(x => add(...x))); }
+      else pronPhrases(l, g).forEach(p => add(p.z, p.p, p.r));
+    }
+  }
+  return out;
+}
+function renderReach(){
+  const here = reach && reach.lv === plv && reach.g === pgi, txt = $("reachtxt");
+  txt.textContent = reach ? `Пройдено до: ${lessonShort(reach.lv, reach.g)}.` : "Отметь, до какого урока ты дошёл, — и можно будет повторять пройденное.";
+  $("reachset").hidden = !!here; $("revgo").disabled = !reach;
+  if (!reach) return;
+  const my = ++reachSeq;
+  reviewPool().then(pool => {
+    if (my !== reachSeq) return;
+    const d = today(), due = pool.filter(p => srs[p.k] && srs[p.k].d <= d).length, fresh = pool.filter(p => !srs[p.k]).length;
+    txt.textContent = `Пройдено до: ${lessonShort(reach.lv, reach.g)}. К повторению сегодня: ${due}, новых фраз: ${fresh}.`;
+  });
+}
+$("reachset").onclick = () => { reach = { lv: plv, g: pgi }; store.set("-reach", reach); renderReach(); };
+$("revgo").onclick = () => startReview(false);
+async function startReview(force){
+  speechStop();
+  const R = review = { loading: true, list: [], i: 0, ok: 0 };
+  renderSpeech();
+  const pool = await reviewPool(), d = today();
+  if (review !== R) return;
+  const due = pool.filter(p => srs[p.k] && srs[p.k].d <= d).sort((a, b) => srs[a.k].d - srs[b.k].d);
+  const fresh = pool.filter(p => !srs[p.k]).map(p => [Math.random(), p]).sort((a, b) => a[0] - b[0]).map(a => a[1]);
+  R.list = [...due, ...fresh].slice(0, 10);
+  // nothing is due: on request repeat what comes back soonest
+  if (!R.list.length && force) R.list = pool.slice().sort((a, b) => srs[a.k].d - srs[b.k].d).slice(0, 10);
+  const sched = pool.filter(p => srs[p.k]).map(p => srs[p.k].d);
+  R.wait = sched.length ? Math.min(...sched) - d : 0;
+  R.loading = false;
+  renderReview();
+}
+function renderReview(){
+  const box = $("sp-review"), R = review;
+  const close = () => { speechStop(); review = null; renderSpeech(); };
+  const panel = (text, buttons) => {
+    box.innerHTML = `<section class="card pcard"><p class="pmsg">${text}</p><div class="actions">${buttons}<button class="btn close" type="button">Закрыть</button></div></section>`;
+    box.querySelector(".close").onclick = close;
+  };
+  if (R.loading) { panel("Собираю фразы из пройденных уроков…", ""); return; }
+  if (!R.list.length) {
+    panel(R.wait > 0 ? `На сегодня всё повторено. Ближайшие фразы вернутся ${days(R.wait)}.` : "В пройденных уроках пока нет фраз для повторения.", R.wait > 0 ? `<button class="btn more" type="button">Повторить всё равно</button>` : "");
+    if (R.wait > 0) box.querySelector(".more").onclick = () => startReview(true);
+    return;
+  }
+  if (R.i >= R.list.length) {
+    panel(`Повторено фраз: ${R.list.length}, верно: ${R.ok}. Ошибки вернутся завтра, верные — через 3, 7 и 14 дней.`, `<button class="btn primary more" type="button">Ещё 10</button>`);
+    box.querySelector(".more").onclick = () => startReview(false);
+    return;
+  }
+  const ph = R.list[R.i], prev = srs[ph.k];
+  let graded = false;
+  box.innerHTML = `<section class="card pcard"><div class="phead"><div class="pnav"><span>Повторение · ${R.i + 1} из ${R.list.length}</span></div><button class="chip close" type="button">Закончить</button></div>`
+    + `<div class="revq">${esc(ph.r || "Прочитай фразу вслух")}</div>`
+    + `<div class="revans"${ph.r ? " hidden" : ""}><div class="pline"><div class="pz" lang="zh-CN">${esc(ph.z)}</div><button class="speak" type="button" aria-label="Послушать фразу">${ICON}</button></div><div class="ppy">${esc(ph.p)}</div></div>`
+    + `<div class="abox"></div><p class="pmsg verdict"></p>`
+    + `<div class="actions"><button class="btn show" type="button">Не помню — показать</button><button class="btn over" type="button" hidden>Засчитать как верно</button><button class="btn primary nxt" type="button" hidden>Дальше</button></div></section>`;
+  const q = s => box.querySelector(s);
+  const grade = ok => {
+    const n = srsGrade(ph.k, ok, prev);
+    if (ok && !graded.ok) R.ok++;
+    graded = { ok };
+    q(".revans").hidden = false; q(".show").hidden = true; q(".nxt").hidden = false; q(".over").hidden = ok;
+    q(".verdict").textContent = ok ? `Верно. Фраза вернётся ${days(n)}.` : "Фраза вернётся завтра.";
+    q(".verdict").className = "pmsg verdict" + (ok ? " good" : "");
+  };
+  q(".close").onclick = close;
+  q(".speak").onclick = () => say(ph.z);
+  q(".show").onclick = () => grade(false);
+  q(".over").onclick = () => grade(true);
+  q(".nxt").onclick = () => { speechStop(); R.i++; renderReview(); };
+  answerBox(q(".abox"), ph, { label: ph.r ? "Сказать по-китайски" : "Сказать фразу", onResult: res => { if (!graded) grade(res.all); } });
+}
+
+document.querySelectorAll("#bnav button").forEach(b => b.onclick = () => { if (section === b.dataset.s) return; section = b.dataset.s; update(); window.scrollTo({ top: 0 }); });
+
+// ---- offline (PWA). DATA_CACHE / SENT_CACHE / SPEECH_CACHE must match DATA / SENT / SPEECH in sw.js
 const DATA_CACHE = "propisi-data-v1";
 const SENT_CACHE = "propisi-sent-v1";
-const cacheFor = u => caches.open(/sentences-/.test(u) ? SENT_CACHE : DATA_CACHE);
+const SPEECH_CACHE = "propisi-speech-v1";
+const cacheFor = u => caches.open(/sentences-/.test(u) ? SENT_CACHE : /speech-/.test(u) ? SPEECH_CACHE : DATA_CACHE);
+// dialogues and phrases are small: fetched along with «скачать всё», not counted in the levels list
+async function cacheSpeech(){ for (const id of SPEECH_IDS) { const u = `data/speech-${id}.json`, c = await cacheFor(u); if (!(await c.match(u))) await c.add(u); } }
 const OFFLINE_OK = "serviceWorker" in navigator && "caches" in window && location.protocol !== "file:";
 const dataFiles = l => ["strokes", "audio", "sentences"].map(n => `data/${n}-${META.levels[l].id}.json`);
 let dlBusy = false, offTimer = 0;
@@ -1394,7 +1857,7 @@ async function refreshOffline(){
   if (!OFFLINE_OK || dlBusy) return;
   try {
     const got = await cachedLevels();
-    if (got.length === META.levels.length) { offStatus("Всё скачано — тренажёр работает без интернета.", "good"); $("dlall").hidden = true; return; }
+    if (got.length === META.levels.length) { cacheSpeech().catch(() => {}); offStatus("Всё скачано — тренажёр работает без интернета.", "good"); $("dlall").hidden = true; return; }
     $("dlall").hidden = false;
     offStatus(got.length ? `Без интернета доступны: ${got.map(L => L.name).join(", ")}. Остальные уровни сохранятся, когда откроешь их, или скачай всё сразу (≈21 МБ).` : "Открытые уровни сохраняются для работы без интернета. Можно скачать всё сразу (≈21 МБ).");
   } catch (e) {}
@@ -1411,6 +1874,7 @@ async function downloadAll(){
       const c = await cacheFor(files[i]);
       if (!(await c.match(files[i]))) await c.add(files[i]);
     }
+    await cacheSpeech();
     dlBusy = false; await refreshOffline();
   } catch (e) {
     dlBusy = false;
