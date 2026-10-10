@@ -1630,10 +1630,33 @@ const idbDo = (mode, fn) => new Promise((ok, no) => {
 });
 const mineAll = () => idbDo("readonly", s => s.getAll());
 const ZH_PM = { "，": ",", "。": ".", "？": "?", "！": "!", "、": ",", "：": ":", "；": ";", "“": " \"", "”": "\"", "（": " (", "）": ")", "《": " «", "》": "»" };
-// pinyin for pasted text: syllable by syllable (word boundaries are not known here)
+// the app's own dictionary: example words of all characters with their pinyin (HSK 1 — as in the textbook,
+// HSK 2–6 are stored syllable by syllable and glued here)
+let WORDS = null;
+function wordDict(){
+  if (WORDS) return WORDS;
+  WORDS = {};
+  const glue = p => p.split(" ").map((s, i) => (i && /^[aeoāáǎàēéěèōóǒò]/.test(s) ? "'" : "") + s).join("");
+  for (const c in IT) {
+    const it = IT[c], book = LOC[c] && LOC[c].lv === 0;
+    for (const [w, p] of [[it.w, it.wp], [(it.ln || "").split(" — ")[0], it.lnp]])
+      if (w && p && [...w].length > 1 && hanOf(w) === w && !WORDS[w]) WORDS[w] = book || p.split(" ").length !== [...w].length ? p : glue(p);
+  }
+  return WORDS;
+}
+// pinyin for pasted text: words of the app's dictionary are written as one word (longest match first),
+// everything else syllable by syllable
 function autoPinyin(z, lib){
+  const ch = [...z], W = wordDict(), all = lib.pinyin(z, { type: "all", toneType: "symbol" });
+  const syl = all.length === ch.length ? all.map(x => x.pinyin) : ch.map(c => lib.pinyin(c, { toneType: "symbol" }));
   let out = "";
-  for (const x of lib.pinyin(z, { type: "all", toneType: "symbol" })) out += x.isZh ? (out && !/[ "«(]$/.test(out) ? " " : "") + x.pinyin : (ZH_PM[x.origin] ?? x.origin);
+  for (let i = 0; i < ch.length;) {
+    if (!/\p{Script=Han}/u.test(ch[i])) { out += ZH_PM[ch[i]] ?? ch[i]; i++; continue; }
+    let k = Math.min(4, ch.length - i), w = "";
+    for (; k > 1; k--) { w = ch.slice(i, i + k).join(""); if (W[w]) break; }
+    out += (out && !/[ "«(]$/.test(out) ? " " : "") + (k > 1 ? W[w] : syl[i]);
+    i += k;
+  }
   out = out.replace(/\s+([,.?!:;»)])/g, "$1").replace(/\s+/g, " ").trim();
   return out.replace(/(^|[.?!]\s+)(\p{Ll})/gu, (m, a, b) => a + b.toUpperCase());
 }
@@ -1840,8 +1863,8 @@ document.querySelectorAll("#bnav button").forEach(b => b.onclick = () => { if (s
 
 // ---- offline (PWA). DATA_CACHE / SENT_CACHE / SPEECH_CACHE must match DATA / SENT / SPEECH in sw.js
 const DATA_CACHE = "propisi-data-v1";
-const SENT_CACHE = "propisi-sent-v1";
-const SPEECH_CACHE = "propisi-speech-v1";
+const SENT_CACHE = "propisi-sent-v2";
+const SPEECH_CACHE = "propisi-speech-v2";
 const cacheFor = u => caches.open(/sentences-/.test(u) ? SENT_CACHE : /speech-/.test(u) ? SPEECH_CACHE : DATA_CACHE);
 // dialogues and phrases are small: fetched along with «скачать всё», not counted in the levels list
 async function cacheSpeech(){ for (const id of SPEECH_IDS) { const u = `data/speech-${id}.json`, c = await cacheFor(u); if (!(await c.match(u))) await c.add(u); } }

@@ -19,6 +19,19 @@ function pinyinOf(z, sentence = true){
   return out[0].toUpperCase() + out.slice(1);
 }
 
+// Words and grammar the Standard Course 1 has not introduced by the lesson (99 = not in book 1 at all).
+// A safety net for the mistakes already made once — extend it when a new one is found.
+const TOO_EARLY = [
+  [/没有/u, 10, "没有 — с урока 10"],
+  [/(\p{Script=Han})[不没]\1/u, 99, "вопрос вида A不A — грамматика второй книги"],
+  [/一起|这么|去年|回来|怎么了|说话/u, 99, "слово не из первой книги"],
+  [/看看|听听|说说|想想|坐坐|问问|读读|写写/u, 99, "удвоение глагола — грамматика второй книги"],
+  [/(什么|哪儿|谁)都/u, 99, "«вопросительное слово + 都» — грамматика второй книги"],
+  [/[做写买看吃喝说读给学]的\p{Script=Han}/u, 99, "«глагол + 的 + существительное» — грамматика второй книги"],
+  [/了[一二三四五六七八九十几]+(年|天|个月|个星期|分钟|次)/u, 99, "длительность после 了 — грамматика второй книги"],
+  [/(美美|国生)(老师|先生)/u, 99, "к 老师 и 先生 добавляют фамилию, не имя"],
+];
+const tooEarly = (z, n) => TOO_EARLY.filter(([re, from]) => n < from && re.test(z)).map(x => x[2]);
 const exclude = loadExclude();
 const errors = [], notes = [];
 // a formula of up to 3 characters (你好, 谢谢你, 不客气) cannot be avoided in any dialogue
@@ -36,6 +49,7 @@ function build(level){
     if (![...z].every(ch => isHan(ch) || PUNCT.includes(ch))) errors.push(`${where}: не китайские символы: ${z}`);
     const ok = allowed(), late = ok ? [...new Set([...z].filter(ch => isHan(ch) && !ok.has(ch)))] : [];
     if (late.length) errors.push(`${where}: ${z} — знаки ${late.join("")} ещё не пройдены`);
+    if (level === 1) for (const why of tooEarly(z, n)) errors.push(`${where}: ${z} — ${why}`);
     return [z, pinyinOf(z, sentence), r];
   };
   for (const [i, line0] of fs.readFileSync(file, "utf8").split(/\r?\n/).entries()) {

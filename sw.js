@@ -9,10 +9,10 @@
 // DATA_VERSION — when strokes/audio change; SENT_VERSION — when sentences change;
 // SPEECH_VERSION — when speech files change
 // (each together with the same number in DATA_CACHE / SENT_CACHE / SPEECH_CACHE in index.html).
-const SHELL_VERSION = 7;
+const SHELL_VERSION = 8;
 const DATA_VERSION = 1;
-const SENT_VERSION = 1;
-const SPEECH_VERSION = 1;
+const SENT_VERSION = 2;
+const SPEECH_VERSION = 2;
 const SHELL = `propisi-shell-v${SHELL_VERSION}`;
 const DATA = `propisi-data-v${DATA_VERSION}`;
 const SENT = `propisi-sent-v${SENT_VERSION}`;

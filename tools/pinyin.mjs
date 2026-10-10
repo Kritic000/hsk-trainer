@@ -23,7 +23,8 @@ const CONTEXT = {
   "个儿": (p, n) => n === "子",                      // 一 个 儿子
 };
 // Proper nouns not capitalized in the dictionary / capitalized there but common nouns
-const PROPER_EXTRA = new Set(["美国", "日本", "英国", "法国", "德国", "上海"]);
+// 汉字 — Hànzì, as the Standard Course writes it
+const PROPER_EXTRA = new Set(["美国", "日本", "英国", "法国", "德国", "上海", "汉字"]);
 const NOT_PROPER = new Set(["美元", "星期日", "华裔", "华侨", "华人", "西方"]);
 // Neutral tone in the dictionary that is wrong here
 const NEUTRAL_KEEP = new Set(["大人"]);
