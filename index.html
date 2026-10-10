@@ -205,6 +205,53 @@ path.old{fill:var(--ghost)} path.new{fill:var(--cinnabar)} path.all{fill:var(--s
 .mist .c{font-family:var(--f-han);font-size:1.8rem;line-height:1;width:44px;text-align:center}
 .steps{margin:0;padding-left:1.3em;display:grid;gap:6px;max-width:68ch}
 
+/* pronunciation trainer */
+.pron-view{display:grid;gap:12px}
+.pron-view .plv{flex:0 1 130px}
+.pcard{display:grid;gap:12px}
+.phead{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.pnav{display:flex;align-items:center;gap:8px;font-size:.88rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.pnav .iconbtn{height:34px;width:34px}
+.pnav .okmark{color:var(--ok);font-weight:600}
+#phide[aria-pressed="true"]{background:var(--cinnabar-soft);color:var(--cinnabar);border-color:var(--cinnabar)}
+#pbody{display:grid;gap:6px}
+.pline{display:flex;align-items:center;gap:12px}
+.pz{font-family:var(--f-han);font-size:clamp(1.6rem,6vw,2.3rem);line-height:1.35;min-width:0;overflow-wrap:anywhere}
+.ppy{color:var(--cinnabar);font-size:1.1rem}
+.pru{font-size:1rem}
+.pcard.hide .ppy,.pcard.hide .pru{display:none}
+.pans{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.pans .pmic{flex:0 0 auto;display:inline-flex;align-items:center;gap:8px;justify-content:center}
+.pans .pmic svg{width:18px;height:18px}
+.pans .pmic.on{background:var(--ink);border-color:var(--ink)}
+#ptext{flex:1 1 240px;min-width:0;font:inherit;font-size:1.05rem;padding:9px 12px;border:1px solid var(--line);border-radius:var(--r);background:var(--sheet);color:var(--ink)}
+#ptext:focus{outline:2px solid var(--cinnabar);outline-offset:1px;border-color:transparent}
+#ptext::placeholder{color:var(--muted);font-size:.9rem}
+.pmsg{margin:0;font-size:.9rem;color:var(--muted);line-height:1.5}
+.pmsg:empty{display:none}
+.pmsg.bad{color:var(--cinnabar)}
+.presult{display:grid;gap:10px;border-top:1px solid var(--line);padding-top:12px}
+.presult p{margin:0}
+.pscore b{font-size:1.5rem;font-variant-numeric:tabular-nums;margin-right:6px}
+.pscore.good b{color:var(--ok)} .pscore.bad b{color:var(--cinnabar)}
+.pheard{font-size:.9rem;color:var(--muted)}
+.pheard .han{color:var(--ink);font-size:1.05rem}
+.psyl{margin:0;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:6px}
+.psyl li{display:grid;justify-items:center;gap:1px;min-width:52px;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:var(--paper);text-align:center}
+.psyl .h{font-family:var(--f-han);font-size:1.3rem;line-height:1.2}
+.psyl .y{font-size:.85rem}
+.psyl .v{font-size:.75rem;color:var(--muted);max-width:150px;line-height:1.3}
+.psyl li.ok{border-color:var(--ok);background:var(--ok-soft)}
+.psyl li.ok .v{color:var(--ok);font-weight:600}
+.psyl li.bad{border-color:var(--cinnabar);background:var(--cinnabar-soft)}
+.psyl li.bad .v{color:var(--cinnabar)}
+.psyl li.skip{opacity:.55}
+.phints{display:grid;gap:6px}
+.phints p{font-size:.9rem;line-height:1.5;padding:8px 10px;border-left:3px solid var(--cinnabar);background:var(--paper);border-radius:0 8px 8px 0}
+.pstats p{margin:0 0 8px}
+#perrs ol{margin:0;padding-left:1.3em;display:grid;gap:4px;font-size:.92rem}
+#perrs b{font-variant-numeric:tabular-nums}
+
 /* offline */
 .offline{display:flex;align-items:center;gap:10px 14px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:14px;font-size:.85rem;color:var(--muted)}
 .offline .btn{flex:none}
@@ -355,6 +402,62 @@ path.old{fill:var(--ghost)} path.new{fill:var(--cinnabar)} path.all{fill:var(--s
     </section>
   </div>
 
+  <div id="pron" class="pron-view" hidden>
+    <div class="picker">
+      <div class="gsel plv"><label for="plv" class="sr">Уровень</label><select id="plv"></select></div>
+      <div class="gsel">
+        <button class="iconbtn" id="pgprev" aria-label="Предыдущий урок">‹</button>
+        <label for="pgsel" class="sr">Урок</label>
+        <select id="pgsel"></select>
+        <button class="iconbtn" id="pgnext" aria-label="Следующий урок">›</button>
+      </div>
+    </div>
+
+    <section class="card pcard" aria-live="polite">
+      <div class="phead">
+        <div class="pnav">
+          <button class="iconbtn" id="pprev" aria-label="Предыдущая фраза">‹</button>
+          <span id="pcount"></span>
+          <button class="iconbtn" id="pnextp" aria-label="Следующая фраза">›</button>
+        </div>
+        <button class="chip" id="phide" aria-pressed="false">Скрыть пиньинь и перевод</button>
+      </div>
+      <div id="pbody">
+        <div class="pline">
+          <div class="pz" id="pz" lang="zh-CN"></div>
+          <button class="speak" id="psay" aria-label="Послушать фразу"></button>
+        </div>
+        <div class="ppy" id="ppy"></div>
+        <div class="pru" id="pru"></div>
+        <div class="pans">
+          <button class="btn primary pmic" id="pmic" type="button" hidden></button>
+          <label class="sr" for="ptext">Ответ голосовым вводом клавиатуры</label>
+          <input id="ptext" type="text" lang="zh-CN" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="done"
+            placeholder="Или продиктуй фразу сюда голосовым вводом клавиатуры">
+        </div>
+        <p class="pmsg" id="pmsg" role="status"></p>
+        <div class="presult" id="presult" hidden>
+          <p class="pscore"><b id="ppct"></b> <span id="pverdict"></span></p>
+          <p class="pheard" id="pheard"></p>
+          <ol class="psyl" id="psyl"></ol>
+          <div class="phints" id="phints"></div>
+          <div class="actions">
+            <button class="btn" id="pagain">Ещё раз</button>
+            <button class="btn primary" id="pnext">Дальше</button>
+          </div>
+        </div>
+      </div>
+      <p class="empty" id="pempty" hidden></p>
+    </section>
+
+    <section class="card pstats">
+      <h2 class="sub">Статистика урока</h2>
+      <p id="pdone"></p>
+      <div id="perrs"></div>
+      <p class="vnote">Распознавание речи сравнивает услышанные слова: если сервис понял другое слово, видно, какой слог прозвучал иначе. Статистика хранится только на этом устройстве.</p>
+    </section>
+  </div>
+
   <div class="offline" id="offline" hidden>
     <button class="btn" id="dlall">Скачать всё для офлайна</button>
     <p id="offstat" role="status"></p>
@@ -381,7 +484,7 @@ const save = () => store.set("-done", done);
 let lv = 0, view = "trainer", gmode = "lessons", gi = 0, ci = 0, mode = "watch", writer = null;
 const pos = store.get("-pos", null);
 if (pos && META.levels[pos.lv]) { lv = pos.lv; gmode = pos.gm || gmode; gi = pos.g || 0; ci = pos.c || 0; }
-if (store.get("-view", "trainer") === "rules") view = "rules";
+if (["rules", "pron"].includes(store.get("-view", "trainer"))) view = store.get("-view", "trainer");
 $("autosay").checked = store.get("-autosay", true);
 $("autosay").onchange = e => store.set("-autosay", e.target.checked);
 
@@ -461,6 +564,12 @@ function renderLevels(){
   r.innerHTML = `Правила<small>для начинающих</small>`;
   r.onclick = () => { view = "rules"; update(); };
   n.appendChild(r);
+  const p = document.createElement("button");
+  p.className = "lv rules"; p.setAttribute("role", "tab"); p.id = "lv-pron";
+  p.setAttribute("aria-selected", view === "pron");
+  p.innerHTML = `Произношение<small>тренер</small>`;
+  p.onclick = () => { if (view !== "pron") pronFrom(lv, gmode, gi); view = "pron"; update(); };
+  n.appendChild(p);
   const total = Object.keys(IT).length, d = Object.keys(IT).filter(c => done[c]).length, cl = Object.keys(IT).filter(c => done[c] === "clean").length;
   $("progress").textContent = `Написано ${d} из ${total} · по памяти без ошибок ${cl}`;
 }
@@ -619,8 +728,10 @@ function update(fromPick){
   clampPos();
   store.set("-pos", { lv, gm: gmode, g: gi, c: ci }); store.set("-view", view);
   renderLevels();
-  $("trainer").hidden = view !== "trainer"; $("rules").hidden = view !== "rules";
+  $("trainer").hidden = view !== "trainer"; $("rules").hidden = view !== "rules"; $("pron").hidden = view !== "pron";
+  if (view !== "pron") pronStop();
   if (view === "rules") { buildRules(); return; }
+  if (view === "pron") { renderPron(); return; }
   renderPicker(); renderStrip();
   const c = curC(), my = ++reqId;
   loadAudio(lv).catch(() => {});
@@ -1051,6 +1162,221 @@ async function practice(target, py){
     setStatus2("Пунктир — эталон тона, красная линия — твой голос. Нажми микрофон, чтобы попробовать ещё раз.");
   }
 }
+
+// ---- pronunciation trainer: read a lesson phrase aloud, the recognized text is compared syllable by syllable.
+// Characters → pinyin for what the service heard: pinyin-pro, loaded when the trainer is first used.
+let pyLib = null;
+function loadPinyin(){
+  if (!pyLib) pyLib = new Promise((ok, no) => {
+    const s = document.createElement("script"); s.src = "lib/pinyin-pro.min.js";
+    s.onload = () => window.pinyinPro ? ok(window.pinyinPro) : no(new Error("pinyin"));
+    s.onerror = () => { pyLib = null; s.remove(); no(new Error("pinyin")); };
+    document.head.appendChild(s);
+  });
+  return pyLib;
+}
+let plv = 0, pgi = 0, pi = 0, pList = [], pRec = null, pTimer = 0;
+const pSentFail = {};
+{ const p = store.get("-pron", null); if (p && META.levels[p.lv]) { plv = p.lv; pgi = p.g || 0; pi = p.i || 0; } }
+const pGroups = l => META.levels[l].modes[levelModes(l)[0]];
+const pStatKey = (l, g) => `${META.levels[l].id}/${g}`;
+let pStats = store.get("-pronstat", {});
+const pStat = (l, g) => pStats[pStatKey(l, g)] || { ok: {}, err: {} };
+// open the trainer on the lesson that is open in the writing trainer
+function pronFrom(l, gm, g){
+  const G = gm === levelModes(l)[0] ? g : 0;
+  if (l !== plv || G !== pgi) { plv = l; pgi = G; pi = 0; }
+}
+// phrases of a lesson: its words (two characters and more), then the example sentences of its characters
+function pronPhrases(l, g){
+  const seen = new Set(), out = [];
+  const add = (z, p, r) => { const k = hanOf(z); if ([...k].length > 1 && p && !seen.has(k)) { seen.add(k); out.push({ z, p, r: r || "", k }); } };
+  const items = pGroups(l)[g].items;
+  items.forEach(c => { const it = IT[c]; if (it.lnp) { const [lw, lm] = it.ln.split(" — "); add(lw, it.lnp, lm); } add(it.w, it.wp, it.wm); });
+  items.forEach(c => (SENTS[c] || []).forEach(s => add(s.z, s.p, s.r)));
+  return out;
+}
+function pronStop(){
+  clearTimeout(pTimer);
+  if (pRec) { const r = pRec; pRec = null; try { r.abort(); } catch (e) {} }
+  $("pmic").classList.remove("on");
+}
+function pronMsg(t, bad, html){ const m = $("pmsg"); m[html ? "innerHTML" : "textContent"] = t; m.className = "pmsg" + (bad ? " bad" : ""); }
+
+function renderPron(){
+  plv = Math.min(Math.max(plv, 0), META.levels.length - 1);
+  const G = pGroups(plv); pgi = Math.min(Math.max(pgi, 0), G.length - 1);
+  const lsel = $("plv"); lsel.innerHTML = "";
+  META.levels.forEach((L, i) => { const o = document.createElement("option"); o.value = i; o.textContent = L.name; lsel.appendChild(o); });
+  lsel.value = plv;
+  const ready = SENTS_LOADED[plv] || pSentFail[plv];
+  const gsel = $("pgsel"); gsel.innerHTML = "";
+  G.forEach((g, i) => {
+    const o = document.createElement("option"); o.value = i; o.textContent = g.name;
+    if (ready) { const ph = pronPhrases(plv, i), ok = pStat(plv, i).ok; o.textContent += `  (${ph.filter(p => ok[p.k]).length}/${ph.length})`; }
+    gsel.appendChild(o);
+  });
+  gsel.value = pgi;
+  $("pgprev").disabled = pgi === 0; $("pgnext").disabled = pgi === G.length - 1;
+  const empty = t => { $("pbody").hidden = true; $("pempty").hidden = false; $("pempty").textContent = t; $("pcount").textContent = ""; $("pprev").disabled = $("pnextp").disabled = true; };
+  if (!ready) {
+    const l = plv;
+    pList = []; empty("Загружаю фразы…"); pronStats();
+    loadSentences(l).catch(() => { pSentFail[l] = true; }).then(() => { if (view === "pron" && plv === l) renderPron(); });
+    return;
+  }
+  pList = pronPhrases(plv, pgi);
+  pi = Math.min(Math.max(pi, 0), Math.max(pList.length - 1, 0));
+  store.set("-pron", { lv: plv, g: pgi, i: pi });
+  pronStats();
+  if (!pList.length) { empty(pSentFail[plv] ? "Не удалось загрузить фразы. Проверь интернет и открой урок ещё раз." : "В этом уроке пока нет фраз."); return; }
+  const ph = pList[pi];
+  $("pbody").hidden = false; $("pempty").hidden = true;
+  $("pz").textContent = ph.z; $("ppy").textContent = ph.p; $("pru").textContent = ph.r;
+  $("pcount").innerHTML = `${pi + 1} из ${pList.length}` + (pStat(plv, pgi).ok[ph.k] ? ` <span class="okmark" title="Фраза пройдена">✓</span>` : "");
+  $("pprev").disabled = pi === 0; $("pnextp").disabled = pi === pList.length - 1;
+  $("presult").hidden = true; $("ptext").value = ""; pronMsg("");
+}
+function pronStats(){
+  const st = pStat(plv, pgi), n = pList.filter(p => st.ok[p.k]).length;
+  $("pdone").textContent = pList.length ? `Пройдено фраз: ${n} из ${pList.length}.` : "";
+  const top = Object.entries(st.err).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  $("perrs").innerHTML = top.length
+    ? `<p>Чаще всего не совпадало:</p><ol>${top.map(([k, c]) => { const [w, g] = k.split(">"); return `<li><b>${c}×</b> ${esc(w)} — ${g ? `слышно как ${esc(g)}` : "не слышно"}</li>`; }).join("")}</ol>`
+    : `<p class="pmsg">${n ? "Ошибок в этом уроке пока нет." : "Прочитай фразу вслух — здесь появятся слоги, которые чаще всего не совпадают."}</p>`;
+}
+function pronGo(g, i){ pronStop(); pgi = g; pi = i; renderPron(); }
+
+// toned syllable → base letters, tone, initial and final
+const PY_INIT = /^(zh|ch|sh|[bpmfdtnlgkhjqxrzcsyw])/;
+function pySplit(y){
+  let base = "", tone = 0;
+  for (const m of y.toLowerCase().normalize("NFD")) { const cp = m.codePointAt(0); if (TONE_MARK[cp]) tone = TONE_MARK[cp]; else if (cp === DIAERESIS) base = base.slice(0, -1) + "ü"; else base += m; }
+  const ini = (base.match(PY_INIT) || [""])[0];
+  return { y: y.toLowerCase(), base, tone, ini, fin: base.slice(ini.length) };
+}
+// align what was heard with the phrase (edit distance over syllables): the same character or a homophone — ok,
+// the same syllable in another tone — half, another syllable or nothing — miss
+function pronCompare(want, heard, lib){
+  const py = t => { const r = lib.pinyin(t, { type: "array", toneType: "symbol" }); return r.length === [...t].length ? r : [...t].map(ch => lib.pinyin(ch, { type: "array", toneType: "symbol" })[0] || ch); };
+  const a = [...want], b = [...heard], A = py(want).map(pySplit), B = py(heard).map(pySplit);
+  const cost = (i, j) => a[i] === b[j] ? 0 : A[i].base !== B[j].base ? 1 : (A[i].tone === B[j].tone || !A[i].tone || !B[j].tone) ? 0 : .5;
+  const n = a.length, m = b.length, D = Array.from({ length: n + 1 }, (_, i) => { const r = Array(m + 1).fill(0); r[0] = i; return r; });
+  for (let j = 1; j <= m; j++) D[0][j] = j;
+  for (let i = 1; i <= n; i++) for (let j = 1; j <= m; j++) D[i][j] = Math.min(D[i - 1][j - 1] + cost(i - 1, j - 1), D[i - 1][j] + 1, D[i][j - 1] + 1);
+  const syl = Array(n);
+  for (let i = n, j = m; i > 0;) {
+    const c = j > 0 ? cost(i - 1, j - 1) : 0;
+    if (j > 0 && D[i][j] === D[i - 1][j - 1] + c) { syl[i - 1] = { h: a[i - 1], st: c === 0 ? "ok" : c < 1 ? "tone" : "bad", want: A[i - 1], got: B[j - 1], gotH: b[j - 1] }; i--; j--; }
+    else if (D[i][j] === D[i - 1][j] + 1) { syl[i - 1] = { h: a[i - 1], st: "miss", want: A[i - 1] }; i--; }
+    else j--;
+  }
+  return { heard, syl, score: syl.reduce((s, o) => s + (o.st === "ok" ? 1 : o.st === "tone" ? .5 : 0), 0) / n };
+}
+const TONE_RU = ["лёгкий тон", "1-й тон (ровный высокий)", "2-й тон (вверх)", "3-й тон (вниз-вверх)", "4-й тон (резко вниз)"];
+const INI_HINTS = [
+  ["zh/z ch/c sh/s", "zh, ch, sh — кончик языка загнут назад к нёбу; z, c, s — язык у зубов, звук свистящий."],
+  ["j/zh q/ch x/sh j/z q/c x/s", "j, q, x — мягкие: язык лежит плоско, кончик у нижних зубов. zh, ch, sh и z, c, s — твёрдые."],
+  ["b/p d/t g/k z/c zh/ch j/q", "p, t, k, c, ch, q произносятся с сильным выдохом, b, d, g, z, zh, j — без него. Разница в выдохе, а не в звонкости."],
+  ["n/l", "n — воздух идёт через нос, l — по бокам языка."],
+  ["r/l", "r — кончик языка загнут назад и не дрожит, звук похож на мягкое «ж»."],
+  ["f/h", "f — губами, h — глубже, как русское «х»."],
+];
+function pronHints(syl){
+  const out = new Set();
+  for (const o of syl) {
+    if (o.st === "ok") continue;
+    if (o.st === "miss") { out.add("Часть слогов не распознана: говори слитно, но не проглатывай слоги."); continue; }
+    const w = o.want, g = o.got;
+    if (o.st === "tone") { out.add(`${w.y}: нужен ${TONE_RU[w.tone]}, а распознано как ${g.y} — ${TONE_RU[g.tone]}.`); continue; }
+    let found = false;
+    const ih = w.ini !== g.ini && INI_HINTS.find(([k]) => k.split(" ").some(p => p === `${w.ini}/${g.ini}` || p === `${g.ini}/${w.ini}`));
+    if (ih) { out.add(ih[1]); found = true; }
+    if (w.fin + "g" === g.fin || g.fin + "g" === w.fin) { out.add("Конечный -n: кончик языка касается верхних зубов. Конечный -ng: звук уходит в нос, язык зубов не касается."); found = true; }
+    else if (w.fin !== g.fin && w.fin.replace("ü", "u") === g.fin.replace("ü", "u")) { out.add("ü — губы трубочкой, как для «у», а язык как для «и»."); found = true; }
+    if (!found) out.add(`${w.y} распознано как ${o.gotH} (${g.y}) — скажи этот слог медленнее и чётче.`);
+  }
+  return [...out].slice(0, 3);
+}
+// alts — recognition variants or typed text; lang — the recognition code, when it came from the microphone button
+async function pronCheck(alts, lang){
+  const ph = pList[pi]; if (!ph) return;
+  const han = [...new Set(alts.map(hanOf).filter(Boolean))];
+  if (!han.length) {
+    const raw = alts.join(" ").trim(), script = scriptOf(raw);
+    if (!raw) return;
+    if (!lang) { pronMsg("В ответе нет иероглифов. Переключи клавиатуру на китайскую (упрощённую) и продиктуй фразу ещё раз.", true); return; }
+    const next = ASR_LANGS[ASR_LANGS.indexOf(lang) + 1];
+    if (next) { setAsrLang(next); pronMsg(`Распознано «${esc(raw)}» — телефон ответил ${script === "cyr" ? "по-русски" : "не по-китайски"} на код ${lang}. Переключил на <b>${next}</b>: нажми микрофон и скажи ещё раз.`, true, true); }
+    else { setAsrLang(ASR_LANGS[0]); pronMsg(`Распознано «${esc(raw)}» (${lang}). ` + wrongLangHelp(script), true, true); }
+    return;
+  }
+  if (lang && lang !== ASR_LANGS[0]) setAsrLang(lang); // this code works here — keep it
+  let lib;
+  try { lib = await loadPinyin(); } catch (e) { pronMsg("Не удалось загрузить словарь пиньиня. Проверь интернет и попробуй ещё раз.", true); return; }
+  if (pList[pi] !== ph || view !== "pron") return;
+  const res = han.map(h => pronCompare(ph.k, h, lib)).sort((x, y) => y.score - x.score)[0];
+  const pct = Math.round(res.score * 100), all = res.syl.every(o => o.st === "ok");
+  // pinyin as written in the lesson, when it splits into one syllable per character
+  const own = syllables(ph.p), shown = own.length === res.syl.length ? own.map(s => s.syl.toLowerCase()) : res.syl.map(o => o.want.y);
+  const st = pStats[pStatKey(plv, pgi)] = pStat(plv, pgi);
+  if (all) st.ok[ph.k] = 1;
+  res.syl.forEach((o, i) => { if (o.st !== "ok") { const k = `${shown[i]}>${o.got ? o.got.y : ""}`; st.err[k] = (st.err[k] || 0) + 1; } });
+  store.set("-pronstat", pStats);
+  pronMsg("");
+  $("ppct").textContent = pct + "%";
+  $("ppct").parentNode.className = "pscore" + (all ? " good" : pct < 60 ? " bad" : "");
+  $("pverdict").textContent = all ? "Всё совпало." : pct >= 80 ? "Почти: проверь выделенные слоги." : "Пока не совпало — послушай фразу и попробуй ещё раз.";
+  $("pheard").innerHTML = `Распознано: <span class="han" lang="zh-CN">${esc(res.heard)}</span>`;
+  $("psyl").innerHTML = res.syl.map((o, i) => `<li class="${o.st === "ok" ? "ok" : o.st === "miss" ? "skip" : "bad"}"><span class="h" lang="zh-CN">${esc(o.h)}</span><span class="y">${esc(shown[i])}</span>`
+    + `<span class="v">${o.st === "ok" ? "✓" : o.st === "miss" ? "не слышно" : o.st === "tone" ? `тон: слышно ${esc(o.got.y)}` : `слышно ${esc(o.gotH)} ${esc(o.got.y)}`}</span></li>`).join("");
+  $("phints").innerHTML = pronHints(res.syl).map(h => `<p>${esc(h)}</p>`).join("");
+  $("presult").hidden = false;
+  if (all) { const ok = $("pcount").querySelector(".okmark"); if (!ok) $("pcount").insertAdjacentHTML("beforeend", ` <span class="okmark" title="Фраза пройдена">✓</span>`); }
+  const o = $("pgsel").options[pgi]; if (o) o.textContent = `${pGroups(plv)[pgi].name}  (${pList.filter(p => st.ok[p.k]).length}/${pList.length})`;
+  pronStats();
+}
+function pronListen(){
+  if (pRec) { try { pRec.stop(); } catch (e) {} return; }
+  try { speechSynthesis.cancel(); } catch (e) {}
+  const lang = asrLang, rec = pRec = recognizer(5, lang), btn = $("pmic");
+  let got = false;
+  btn.classList.add("on"); pronMsg(`Слушаю… прочитай фразу вслух. Язык распознавания: ${lang}.`);
+  rec.onresult = e => { got = true; pronCheck([...e.results[0]].map(a => a.transcript || ""), lang); };
+  rec.onerror = e => { if (e.error !== "aborted") { got = true; pronMsg(micError(e), true); } };
+  rec.onend = () => {
+    clearTimeout(guard); btn.classList.remove("on");
+    if (pRec !== rec) return;
+    pRec = null;
+    if (!got) pronMsg("Ничего не услышал — проверь интернет и микрофон и попробуй ещё раз.", true);
+  };
+  // some browsers never end the session without network: give up after 15 s
+  const guard = setTimeout(() => { try { rec.abort(); } catch (e) {} }, 15000);
+  try { rec.start(); } catch (e) { clearTimeout(guard); pRec = null; btn.classList.remove("on"); pronMsg(micError(e), true); }
+}
+$("plv").onchange = e => { plv = +e.target.value; pronGo(0, 0); };
+$("pgsel").onchange = e => pronGo(+e.target.value, 0);
+$("pgprev").onclick = () => pronGo(pgi - 1, 0);
+$("pgnext").onclick = () => pronGo(pgi + 1, 0);
+$("pprev").onclick = () => pronGo(pgi, pi - 1);
+$("pnextp").onclick = () => pronGo(pgi, pi + 1);
+$("pnext").onclick = () => { if (pi < pList.length - 1) pronGo(pgi, pi + 1); else if (pgi < pGroups(plv).length - 1) pronGo(pgi + 1, 0); else pronGo(pgi, pi); };
+$("pagain").onclick = () => { $("presult").hidden = true; $("ptext").value = ""; if (SR) pronListen(); else $("ptext").focus(); };
+$("psay").innerHTML = ICON;
+$("psay").onclick = () => { const ph = pList[pi]; if (ph && !tts(ph.z, .85)) pronMsg("На этом устройстве нет китайского голоса для озвучки.", true); };
+$("pmic").innerHTML = MIC + "<span>Сказать фразу</span>"; $("pmic").hidden = !SR; $("pmic").onclick = pronListen;
+if (!SR) $("ptext").placeholder = "Продиктуй фразу сюда голосовым вводом клавиатуры";
+// keyboard dictation fills the field by itself: check on Enter or when the text stops changing
+const pronTyped = () => { clearTimeout(pTimer); const t = $("ptext").value.trim(); if (t) pronCheck([t]); };
+$("ptext").addEventListener("keydown", e => { if (e.key === "Enter" && !e.isComposing) { e.preventDefault(); pronTyped(); } });
+$("ptext").addEventListener("input", e => { clearTimeout(pTimer); if (!e.isComposing && hanOf($("ptext").value)) pTimer = setTimeout(pronTyped, 1500); });
+function setPronHide(on){
+  document.querySelector(".pcard").classList.toggle("hide", on);
+  $("phide").setAttribute("aria-pressed", on);
+  $("phide").textContent = on ? "Показать пиньинь и перевод" : "Скрыть пиньинь и перевод";
+}
+setPronHide(store.get("-pronhide", false));
+$("phide").onclick = () => { const on = !document.querySelector(".pcard").classList.contains("hide"); store.set("-pronhide", on); setPronHide(on); };
 
 // ---- offline (PWA). DATA_CACHE / SENT_CACHE must match DATA / SENT in sw.js
 const DATA_CACHE = "propisi-data-v1";
