@@ -272,7 +272,16 @@ path.old{fill:var(--ghost)} path.new{fill:var(--cinnabar)} path.all{fill:var(--s
 .pans .pmic.on{background:var(--ink);border-color:var(--ink)}
 .ptext,.mform input,.mform textarea{font:inherit;font-size:1.05rem;padding:9px 12px;border:1px solid var(--line);border-radius:var(--r);background:var(--sheet);color:var(--ink)}
 .ptext{flex:1 1 180px;min-width:0}
-.pans .pclr,.speech .mform .actions .btn{flex:0 0 auto}
+.pans .pclr,.pans .prec,.speech .mform .actions .btn{flex:0 0 auto}
+.pans .prec.on{background:var(--cinnabar);border-color:var(--cinnabar);color:#fff}
+.pplay{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:.8rem;color:var(--muted)}
+.pplay .chip:disabled{opacity:.4;cursor:default}
+.ptakes{display:inline-flex;gap:6px;align-items:center;margin-left:6px}
+.ptakes .chip{padding:4px 10px}
+.ptakes .chip[aria-pressed="true"]{background:var(--cinnabar-soft);color:var(--cinnabar);border-color:var(--cinnabar)}
+.linkbtn{border:0;background:none;padding:0;font:inherit;color:var(--cinnabar);text-decoration:underline;cursor:pointer}
+.recset{display:flex;gap:8px 14px;flex-wrap:wrap;align-items:center;font-size:.8rem;color:var(--muted)}
+.recset p{margin:0;flex:1 1 260px}
 .ptext:focus,.mform input:focus,.mform textarea:focus{outline:2px solid var(--cinnabar);outline-offset:1px;border-color:transparent}
 .ptext::placeholder,.mform ::placeholder{color:var(--muted);font-size:.9rem}
 .pmsg{margin:0;font-size:.9rem;color:var(--muted);line-height:1.5}
@@ -551,6 +560,7 @@ path.old{fill:var(--ghost)} path.new{fill:var(--cinnabar)} path.all{fill:var(--s
     </div>
 
     <div id="sp-review" class="spane" hidden></div>
+    <div class="recset" id="recset" hidden><p id="recstat"></p><button class="chip" id="recdel" type="button">Удалить мои записи</button></div>
   </div>
 
   <div class="offline" id="offline" hidden>
@@ -1218,7 +1228,7 @@ async function practice(target, py){
   const panel = $("voice"), status = $("vstatus"), heard = $("vheard"), chart = $("vchart");
   panel.hidden = false; heard.hidden = true; chart.innerHTML = "";
   const setStatus2 = (t, bad) => { status.textContent = t; status.className = "vstatus" + (bad ? " bad" : ""); };
-  const sylls = syllables(py), ref = reference(sylls.map(s => s.tone));
+  const sylls = syllables(py);
   let stream;
   try {
     stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
@@ -1294,51 +1304,59 @@ async function practice(target, py){
   $("vstop").onclick = () => voiceRun ? stop() : (panel.hidden = true);
 
   function draw(){
-    // voiced frames → smoothed semitones
-    let pts = frames.map(f => ({ t: f.t, st: f.f0 ? 12 * Math.log2(f.f0 / 100) : null }));
-    pts = pts.map((p, i) => { if (p.st == null) return p; const w = pts.slice(Math.max(0, i - 2), i + 3).filter(q => q.st != null).map(q => q.st); return { t: p.t, st: median(w) }; });
-    const voiced = pts.filter(p => p.st != null);
-    if (voiced.length < 4) { setStatus2("Не удалось услышать голос. Скажи громче и ближе к микрофону, затем нажми ещё раз.", true); return; }
-    // drop octave errors
-    const m = median(voiced.map(p => p.st));
-    pts.forEach(p => { if (p.st != null && Math.abs(p.st - m) > 9) p.st = null; });
-    // segments of voiced frames (gaps ≤ 2 frames), adjusted to the number of syllables
-    let segs = [], cur = null, gap = 0;
-    pts.forEach((p, i) => {
-      if (p.st != null) { if (!cur) cur = { a: i, b: i }; cur.b = i; gap = 0; }
-      else if (cur && ++gap > 2) { segs.push(cur); cur = null; }
-    });
-    if (cur) segs.push(cur);
-    segs = segs.filter(s => s.b - s.a >= 2);
-    const n = Math.max(1, sylls.length);
-    while (segs.length > n) { let k = 0, best = Infinity; for (let i = 0; i < segs.length - 1; i++) { const g = segs[i + 1].a - segs[i].b; if (g < best) { best = g; k = i; } } segs.splice(k, 2, { a: segs[k].a, b: segs[k + 1].b }); }
-    while (segs.length && segs.length < n) {
-      let k = 0; segs.forEach((s, i) => { if (s.b - s.a > segs[k].b - segs[k].a) k = i; });
-      const s = segs[k]; if (s.b - s.a < 3) break;
-      const half = (s.a + s.b) >> 1; segs.splice(k, 1, { a: s.a, b: half }, { a: half + 1, b: s.b });
-    }
-    // speaker's middle: median of this and earlier attempts (stored on this device only)
-    let hist = store.get("-voicemid", []); hist = [...hist, m].slice(-10); store.set("-voicemid", hist);
-    const mid = median(hist), level = st => Math.min(5.5, Math.max(0.5, 3 + (st - mid) / 2.5));
-    const shape = ys => { if (ys.length < 2) return ""; const a = ys[0], b = ys[ys.length - 1], lo = Math.min(...ys), hi = Math.max(...ys);
-      if (hi - lo < 0.8) return "ровно"; if (lo < a - 0.5 && lo < b - 0.5) return "вниз-вверх"; return b - a > 0 ? "вверх" : "вниз"; };
-    const W = 84, H = 68, X = x => 6 + x * (W - 12), Y = v => H - 6 - (v - 1) / 4 * (H - 12);
-    const TONE = ["лёгкий", "1-й: ровный высокий", "2-й: вверх", "3-й: вниз-вверх", "4-й: резко вниз"];
-    chart.innerHTML = sylls.map((s, i) => {
-      const r = ref[i], seg = segs[i];
-      const refPath = r.line.map((v, j) => `${j ? "L" : "M"}${X(j / (r.line.length - 1))},${Y(v)}`).join(" ");
-      let you = "", ys = [];
-      if (seg) {
-        const part = pts.slice(seg.a, seg.b + 1).filter(p => p.st != null);
-        ys = part.map(p => level(p.st));
-        you = part.map((p, j) => `${j ? "L" : "M"}${X(part.length > 1 ? j / (part.length - 1) : 0.5).toFixed(1)},${Y(level(p.st)).toFixed(1)}`).join(" ");
-      }
-      const grid = [1, 2, 3, 4, 5].map(v => `<line class="grid" x1="0" x2="${W}" y1="${Y(v)}" y2="${Y(v)}"/>`).join("");
-      return `<figure><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(s.syl)}: эталон ${TONE[r.tone]}, у тебя ${shape(ys) || "не слышно"}">${grid}<path class="ref" d="${refPath}"/>${you ? `<path class="you" d="${you}"/>` : ""}</svg>`
-        + `<figcaption><b>${esc(s.syl)}</b><br>${TONE[r.tone]}${r.note ? ` (${r.note})` : ""}<br>у тебя: ${shape(ys) || "—"}</figcaption></figure>`;
-    }).join("");
+    const html = toneChartHTML(frames, sylls, true);
+    if (!html) { setStatus2("Не удалось услышать голос. Скажи громче и ближе к микрофону, затем нажми ещё раз.", true); return; }
+    chart.innerHTML = html;
     setStatus2("Пунктир — эталон тона, красная линия — твой голос. Нажми микрофон, чтобы попробовать ещё раз.");
   }
+}
+// Tone chart: frames [{ t, f0 }] of a voice against the reference contours of the syllables.
+// "" — no voice in the frames. learn — remember the speaker's middle pitch (a new attempt, not a replay).
+function toneChartHTML(frames, sylls, learn){
+  const ref = reference(sylls.map(s => s.tone));
+  // voiced frames → smoothed semitones
+  let pts = frames.map(f => ({ t: f.t, st: f.f0 ? 12 * Math.log2(f.f0 / 100) : null }));
+  pts = pts.map((p, i) => { if (p.st == null) return p; const w = pts.slice(Math.max(0, i - 2), i + 3).filter(q => q.st != null).map(q => q.st); return { t: p.t, st: median(w) }; });
+  const voiced = pts.filter(p => p.st != null);
+  if (voiced.length < 4) return "";
+  // drop octave errors
+  const m = median(voiced.map(p => p.st));
+  pts.forEach(p => { if (p.st != null && Math.abs(p.st - m) > 9) p.st = null; });
+  // segments of voiced frames (gaps ≤ 2 frames), adjusted to the number of syllables
+  let segs = [], cur = null, gap = 0;
+  pts.forEach((p, i) => {
+    if (p.st != null) { if (!cur) cur = { a: i, b: i }; cur.b = i; gap = 0; }
+    else if (cur && ++gap > 2) { segs.push(cur); cur = null; }
+  });
+  if (cur) segs.push(cur);
+  segs = segs.filter(s => s.b - s.a >= 2);
+  const n = Math.max(1, sylls.length);
+  while (segs.length > n) { let k = 0, best = Infinity; for (let i = 0; i < segs.length - 1; i++) { const g = segs[i + 1].a - segs[i].b; if (g < best) { best = g; k = i; } } segs.splice(k, 2, { a: segs[k].a, b: segs[k + 1].b }); }
+  while (segs.length && segs.length < n) {
+    let k = 0; segs.forEach((s, i) => { if (s.b - s.a > segs[k].b - segs[k].a) k = i; });
+    const s = segs[k]; if (s.b - s.a < 3) break;
+    const half = (s.a + s.b) >> 1; segs.splice(k, 1, { a: s.a, b: half }, { a: half + 1, b: s.b });
+  }
+  // speaker's middle: median of this and earlier attempts (stored on this device only)
+  let hist = store.get("-voicemid", []); hist = [...hist, m].slice(-10); if (learn) store.set("-voicemid", hist);
+  const mid = median(hist), level = st => Math.min(5.5, Math.max(0.5, 3 + (st - mid) / 2.5));
+  const shape = ys => { if (ys.length < 2) return ""; const a = ys[0], b = ys[ys.length - 1], lo = Math.min(...ys), hi = Math.max(...ys);
+    if (hi - lo < 0.8) return "ровно"; if (lo < a - 0.5 && lo < b - 0.5) return "вниз-вверх"; return b - a > 0 ? "вверх" : "вниз"; };
+  const W = 84, H = 68, X = x => 6 + x * (W - 12), Y = v => H - 6 - (v - 1) / 4 * (H - 12);
+  const TONE = ["лёгкий", "1-й: ровный высокий", "2-й: вверх", "3-й: вниз-вверх", "4-й: резко вниз"];
+  return sylls.map((s, i) => {
+    const r = ref[i], seg = segs[i];
+    const refPath = r.line.map((v, j) => `${j ? "L" : "M"}${X(j / (r.line.length - 1))},${Y(v)}`).join(" ");
+    let you = "", ys = [];
+    if (seg) {
+      const part = pts.slice(seg.a, seg.b + 1).filter(p => p.st != null);
+      ys = part.map(p => level(p.st));
+      you = part.map((p, j) => `${j ? "L" : "M"}${X(part.length > 1 ? j / (part.length - 1) : 0.5).toFixed(1)},${Y(level(p.st)).toFixed(1)}`).join(" ");
+    }
+    const grid = [1, 2, 3, 4, 5].map(v => `<line class="grid" x1="0" x2="${W}" y1="${Y(v)}" y2="${Y(v)}"/>`).join("");
+    return `<figure><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(s.syl)}: эталон ${TONE[r.tone]}, у тебя ${shape(ys) || "не слышно"}">${grid}<path class="ref" d="${refPath}"/>${you ? `<path class="you" d="${you}"/>` : ""}</svg>`
+      + `<figcaption><b>${esc(s.syl)}</b><br>${TONE[r.tone]}${r.note ? ` (${r.note})` : ""}<br>у тебя: ${shape(ys) || "—"}</figcaption></figure>`;
+  }).join("");
 }
 
 // ---- section «Речь»: dialogues and key phrases of a lesson (data/speech-N.json), pronunciation trainer,
@@ -1377,7 +1395,7 @@ const spMsg = t => { $("spmsg").textContent = t || ""; };
 
 // ---- speaking: one phrase at a time, with a callback when the voice has finished
 let sayCancel = null;
-function cancelSay(){ voiceStop(); if (sayCancel) { const c = sayCancel; sayCancel = null; c(); } }
+function cancelSay(){ voiceStop(); mineStop(); if (sayCancel) { const c = sayCancel; sayCancel = null; c(); } }
 function say(z){ cancelSay(); spMsg(""); tts(z, .85); }
 function sayThen(text, cb){
   cancelSay();
@@ -1457,22 +1475,256 @@ function pronHints(syl){
   return [...out].slice(0, 3);
 }
 
-// ---- answer box: microphone button + a field for the keyboard's dictation, result by syllables.
+// ---- my voice: recordings of the learner's attempts. They live on this device only (IndexedDB "propisi-rec")
+// and are never sent anywhere. Kept: the last REC_KEEP attempts of a phrase, REC_LIMIT bytes in all — the oldest go first.
+const AC = window.AudioContext || window.webkitAudioContext;
+const REC_OK = MIC_OK && !!window.MediaRecorder && !!window.indexedDB && !!AC;
+const REC_KEEP = 3, REC_LIMIT = 12e6;
+let actx = null;
+function audioCtx(){ actx = actx || new AC(); if (actx.state === "suspended") { try { actx.resume().catch(() => {}); } catch (e) {} } return actx; }
+// what the microphone button does on this device: "both" — recognition and recording at once,
+// "rec" — recording only, "asr" — recognition only (some phones give the microphone to one of them)
+const micMode = () => { const m = store.get("-micmode", "both"); return ["both", "rec", "asr"].includes(m) ? m : "both"; };
+const setMicMode = m => store.set("-micmode", m);
+
+// two stores: "takes" — { id, k (phrase), at, dur, size }, "wav" — id → ArrayBuffer (16-bit mono WAV)
+const recOpen = (mode, fn) => new Promise((ok, no) => {
+  let rq;
+  try { rq = indexedDB.open("propisi-rec", 1); } catch (e) { no(e); return; }
+  rq.onupgradeneeded = () => { rq.result.createObjectStore("takes", { keyPath: "id", autoIncrement: true }).createIndex("k", "k"); rq.result.createObjectStore("wav"); };
+  rq.onerror = () => no(rq.error);
+  rq.onsuccess = () => {
+    const db = rq.result;
+    try {
+      const tx = db.transaction(["takes", "wav"], mode), r = fn(tx.objectStore("takes"), tx.objectStore("wav"));
+      tx.oncomplete = () => { db.close(); ok(r && r.result); };
+      tx.onerror = tx.onabort = () => { db.close(); no(tx.error); };
+    } catch (e) { db.close(); no(e); }
+  };
+});
+const recTakes = k => recOpen("readonly", t => t.index("k").getAll(k)).then(a => a.sort((x, y) => x.at - y.at));
+const recWav = id => recOpen("readonly", (t, w) => w.get(id));
+async function recSave(k, wav, dur){
+  await recOpen("readwrite", (t, w) => { const r = t.add({ k, at: Date.now(), dur, size: wav.byteLength }); r.onsuccess = () => w.put(wav, r.result); return r; });
+  const all = (await recOpen("readonly", t => t.getAll())).sort((x, y) => y.at - x.at || y.id - x.id), seen = {}, del = [];
+  let sum = 0;
+  for (const m of all) { seen[m.k] = (seen[m.k] || 0) + 1; if (seen[m.k] > REC_KEEP || sum + m.size > REC_LIMIT) del.push(m.id); else sum += m.size; }
+  if (del.length) await recOpen("readwrite", (t, w) => { del.forEach(id => { t.delete(id); w.delete(id); }); });
+}
+async function recStat(){
+  if (!REC_OK) return;
+  try {
+    const all = await recOpen("readonly", t => t.getAll()), mb = all.reduce((s, m) => s + m.size, 0) / 1e6;
+    $("recset").hidden = false; $("recdel").hidden = !all.length;
+    $("recstat").textContent = (all.length ? `Записей моего голоса: ${all.length}, ${mb < 0.1 ? "меньше 0,1" : mb.toFixed(1).replace(".", ",")} МБ. ` : "Записей моего голоса пока нет. ")
+      + "Они хранятся только на этом устройстве и никуда не отправляются; по три последние попытки на фразу, самые старые удаляются сами.";
+  } catch (e) {}
+}
+
+function wavOf(pcm, rate){
+  const b = new ArrayBuffer(44 + pcm.length * 2), v = new DataView(b), str = (o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+  str(0, "RIFF"); v.setUint32(4, 36 + pcm.length * 2, true); str(8, "WAVEfmt "); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+  v.setUint32(24, rate, true); v.setUint32(28, rate * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); str(36, "data"); v.setUint32(40, pcm.length * 2, true);
+  for (let i = 0; i < pcm.length; i++) v.setInt16(44 + i * 2, Math.max(-1, Math.min(1, pcm[i])) * 32767, true);
+  return b;
+}
+function wavPcm(b){
+  const v = new DataView(b), n = (b.byteLength - 44) >> 1, pcm = new Float32Array(n);
+  for (let i = 0; i < n; i++) pcm[i] = v.getInt16(44 + i * 2, true) / 32768;
+  return { pcm, rate: v.getUint32(24, true) };
+}
+
+// Records the microphone until stop(), a long pause after speech, or 15 s.
+// run.result — the recorded Blob, or null (stopped with stop(false), nothing recorded, or no microphone: run.err).
+let recRun = null;
+function recStop(keep){ if (recRun) recRun.stop(keep); }
+function recStart(){
+  recStop(false);
+  let finished = false, keep = true, mr = null, stream = null, src = null, timer = 0, resolve;
+  const chunks = [];
+  const close = () => { clearInterval(timer); if (stream) stream.getTracks().forEach(t => t.stop()); if (src) { try { src.disconnect(); } catch (e) {} } };
+  const run = {
+    err: null,
+    stop(k){
+      if (finished) return;
+      finished = true; keep = k !== false; clearInterval(timer);
+      if (recRun === run) recRun = null;
+      if (mr && mr.state !== "inactive") { try { mr.stop(); return; } catch (e) {} }
+      close(); resolve(null);
+    },
+  };
+  run.result = new Promise(r => { resolve = r; });
+  recRun = run;
+  navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false } }).then(s => {
+    stream = s;
+    if (finished) { close(); return; }
+    try {
+      mr = new MediaRecorder(s);
+      mr.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+      mr.onstop = () => { close(); resolve(keep && chunks.length ? new Blob(chunks, { type: mr.mimeType || chunks[0].type }) : null); };
+      mr.onerror = () => run.stop(false);
+      mr.start();
+    } catch (e) { run.err = e; mr = null; run.stop(false); return; }
+    // the end by itself: 1.5 s of silence after speech, 6 s without a sound, 15 s in all
+    const ac = audioCtx(), an = ac.createAnalyser(); an.fftSize = 1024;
+    src = ac.createMediaStreamSource(s); src.connect(an);
+    const buf = new Float32Array(an.fftSize), t0 = performance.now();
+    let noise = 0.004, spoke = false, last = 0;
+    timer = setInterval(() => {
+      const t = performance.now() - t0;
+      if (t > 15000) { run.stop(true); return; }
+      if (ac.state !== "running") return; // the level is not known: wait for stop() or the limit
+      an.getFloatTimeDomainData(buf);
+      let rms = 0; for (const v of buf) rms += v * v; rms = Math.sqrt(rms / buf.length);
+      if (t < 250) { noise = Math.max(noise, rms); return; }
+      if (rms > Math.max(0.012, noise * 2.5)) { spoke = true; last = t; }
+      if ((spoke && t - last > 1500) || (!spoke && t > 6000)) run.stop(true);
+    }, 50);
+  }, e => { run.err = e; finished = true; if (recRun === run) recRun = null; resolve(null); });
+  return run;
+}
+// The recording → mono samples without the silence at both ends, brought to one loudness.
+// { silent: true } — nothing was recorded.
+async function recProcess(blob){
+  const raw = await blob.arrayBuffer();
+  const ab = await new Promise((ok, no) => { const p = audioCtx().decodeAudioData(raw, ok, no); if (p && p.catch) p.catch(no); });
+  const OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+  let out = null;
+  for (const rate of [16000, 22050, 44100]) { // old Safari has no 16 kHz contexts
+    try {
+      const off = new OAC(1, Math.max(1, Math.ceil(ab.duration * rate)), rate), s = off.createBufferSource();
+      s.buffer = ab; s.connect(off.destination); s.start();
+      out = await new Promise((ok, no) => { off.oncomplete = e => ok(e.renderedBuffer); const p = off.startRendering(); if (p && p.catch) p.catch(no); });
+      break;
+    } catch (e) {}
+  }
+  if (!out) throw new Error("resample");
+  const rate = out.sampleRate, x = out.getChannelData(0), F = Math.round(rate * .02), e = [];
+  let top = 0;
+  for (let i = 0; i + F <= x.length; i += F) { let s = 0; for (let j = i; j < i + F; j++) s += x[j] * x[j]; const v = Math.sqrt(s / F); e.push(v); if (v > top) top = v; }
+  if (top < 0.004) return { silent: true };
+  const thr = Math.max(0.003, top * 0.08), a = e.findIndex(v => v > thr);
+  let b = e.length - 1; while (b > a && e[b] <= thr) b--;
+  const pcm = x.slice(Math.max(0, a * F - Math.round(rate * .1)), Math.min(x.length, (b + 1) * F + Math.round(rate * .15)));
+  let peak = 0; for (const v of pcm) peak = Math.max(peak, Math.abs(v));
+  const g = Math.min(0.9 / peak, 10); for (let i = 0; i < pcm.length; i++) pcm[i] *= g;
+  return { pcm, rate, dur: pcm.length / rate };
+}
+// pitch of a recording, frame by frame — the input of the tone chart
+function pitchFrames(pcm, rate){
+  const N = rate >= 32000 ? 2048 : 1024, step = Math.round(rate * .025), rms = [];
+  let top = 0;
+  for (let i = 0; i + N <= pcm.length; i += step) { let s = 0; for (let j = i; j < i + N; j++) s += pcm[j] * pcm[j]; const v = Math.sqrt(s / N); rms.push(v); if (v > top) top = v; }
+  return rms.map((v, k) => ({ t: k * 25, f0: v > Math.max(0.01, top * 0.12) ? pitchYin(pcm.subarray(k * step, k * step + N), rate) : null }));
+}
+// playback of an attempt
+const mineEl = new Audio();
+let mineUrl = "", mineTok = 0;
+function mineStop(){ mineTok++; try { mineEl.pause(); } catch (e) {} mineEl.onended = null; }
+function minePlay(wav, then){
+  mineStop();
+  const my = mineTok;
+  if (mineUrl) URL.revokeObjectURL(mineUrl);
+  mineUrl = URL.createObjectURL(new Blob([wav], { type: "audio/wav" }));
+  mineEl.src = mineUrl;
+  mineEl.onended = () => { if (my === mineTok && then) then(); };
+  const p = mineEl.play(); if (p) p.catch(() => {});
+}
+
+// ---- answer box: microphone button + a field for the keyboard's dictation, result by syllables;
+// «Записать себя», playback of the announcer and of the learner's attempts, tone chart of an attempt.
 // One box is alive at a time (trainer, role play, review). ph: { z, p, k }; opt.onResult({ all, pct, syl, shown }).
 let ansRec = null, ansTimer = 0, ansSeq = 0;
 function answerStop(){
   ansSeq++; clearTimeout(ansTimer);
   if (ansRec) { const r = ansRec; ansRec = null; try { r.abort(); } catch (e) {} }
+  recStop(false); mineStop();
 }
 function answerBox(el, ph, opt = {}){
   answerStop();
   const my = ansSeq, live = () => my === ansSeq && el.isConnected;
-  el.innerHTML = `<div class="pans"><button class="btn primary pmic" type="button"${SR ? "" : " hidden"}>${MIC}<span>${opt.label || "Сказать фразу"}</span></button>`
+  el.innerHTML = (REC_OK ? `<div class="pplay"><button class="chip pdic" type="button"${opt.hideDictor ? " hidden" : ""}>▶ Диктор</button><button class="chip pme" type="button" disabled>▶ Я</button>`
+      + `<button class="chip pcmp" type="button" disabled${opt.hideDictor ? " hidden" : ""}>Сравнить</button><span class="ptakes"></span></div>` : "")
+    + `<div class="pans"><button class="btn primary pmic" type="button"${SR ? "" : " hidden"}>${MIC}<span>${opt.label || "Сказать фразу"}</span></button>`
     + `<input class="ptext" type="text" lang="zh-CN" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="done" aria-label="Ответ голосовым вводом клавиатуры" placeholder="${SR ? "Или продиктуй" : "Продиктуй"} фразу сюда голосовым вводом клавиатуры">`
-    + `<button class="btn pclr" type="button">Очистить</button></div>`
-    + `<p class="pmsg" role="status"></p><div class="presult" hidden><p class="pscore"><b></b> <span></span></p><p class="pheard"></p><ol class="psyl"></ol><div class="phints"></div></div>`;
+    + `<button class="btn pclr" type="button">Очистить</button><button class="btn prec" type="button"${REC_OK ? "" : " hidden"}>Записать себя</button></div>`
+    + `<p class="pmsg" role="status"></p><p class="pmsg rmsg" role="status"></p><p class="pmsg pmode"></p><div class="vchart ptone" hidden></div><div class="presult" hidden><p class="pscore"><b></b> <span></span></p><p class="pheard"></p><ol class="psyl"></ol><div class="phints"></div></div>`;
   const q = s => el.querySelector(s), btn = q(".pmic"), inp = q(".ptext");
   const msg = (t, bad, html) => { const m = q(".pmsg"); m[html ? "innerHTML" : "textContent"] = t; m.className = "pmsg" + (bad ? " bad" : ""); };
+  // ---- my voice: the last attempts of this phrase
+  const rmsg = (t, bad) => { const m = q(".rmsg"); m.textContent = t; m.className = "pmsg rmsg" + (bad ? " bad" : ""); };
+  const recBtn = q(".prec");
+  let takes = [], sel = -1, myRun = null;
+  const takeWav = async t => t.wav || (t.wav = await recWav(t.id));
+  async function drawTakes(){
+    q(".pme").disabled = q(".pcmp").disabled = sel < 0;
+    q(".ptakes").innerHTML = takes.length > 1 ? "попытки: " + takes.map((t, i) => `<button class="chip ptake" type="button" aria-pressed="${i === sel}" aria-label="Попытка ${i + 1}${i === takes.length - 1 ? ", последняя" : ""}">${i + 1}</button>`).join("") : "";
+    q(".ptakes").querySelectorAll(".ptake").forEach((b, i) => { b.onclick = () => { sel = i; drawTakes(); playMine(); }; });
+    // the tone chart is drawn by the chosen attempt
+    const box = q(".ptone"), t = takes[sel], sy = syllables(ph.p || "");
+    if (!t) { box.hidden = true; return; }
+    try {
+      const { pcm, rate } = wavPcm(await takeWav(t));
+      if (!live() || takes[sel] !== t) return;
+      const html = sy.length ? toneChartHTML(pitchFrames(pcm, rate), sy) : "";
+      box.innerHTML = html; box.hidden = !html;
+    } catch (e) { box.hidden = true; }
+  }
+  async function loadTakes(){
+    if (!REC_OK) return;
+    try { takes = await recTakes(ph.k); } catch (e) { takes = []; }
+    if (!live()) return;
+    sel = takes.length - 1; drawTakes();
+  }
+  async function playMine(then){
+    const t = takes[sel];
+    if (!t) return;
+    cancelSay();
+    try { minePlay(await takeWav(t), then); } catch (e) { rmsg("Не получилось открыть запись.", true); }
+  }
+  // what the microphone button does here, when it cannot do both things at once
+  function modeNote(){
+    const p = q(".pmode"), m = REC_OK && SR ? micMode() : "both";
+    if (m === "both") { p.innerHTML = ""; return; }
+    p.innerHTML = (m === "rec" ? "Кнопка микрофона на этом устройстве записывает голос без распознавания: ответ проверяй через поле, диктовкой клавиатуры." : "Кнопка микрофона на этом устройстве распознаёт без записи голоса: записать себя можно отдельной кнопкой.")
+      + ` <button class="linkbtn" type="button" data-m="${m === "rec" ? "asr" : "rec"}">${m === "rec" ? "Лучше распознавать" : "Лучше записывать"}</button> · <button class="linkbtn" type="button" data-m="both">Попробовать и то и другое</button>`;
+    p.querySelectorAll("button").forEach(b => { b.onclick = () => { setMicMode(b.dataset.m); rmsg(""); modeNote(); }; });
+  }
+  // asr — recognition runs along: { heard } — it returned something, { solo } — it failed and only the recording goes on
+  function record(asr){
+    const run = myRun = recStart();
+    recBtn.textContent = "Стоп"; recBtn.classList.add("on");
+    if (!asr) rmsg("Записываю — говори. Остановлю сам после паузы, или нажми «Стоп».");
+    run.result.then(async blob => {
+      if (myRun === run) { myRun = null; recBtn.textContent = "Записать себя"; recBtn.classList.remove("on"); }
+      if (!live()) return;
+      if (run.err) { rmsg(asr ? "Записать голос не получилось: " + micError(run.err) : micError(run.err), true); return; }
+      if (!blob) { if (!asr) rmsg(""); return; }
+      let r;
+      try { r = await recProcess(blob); } catch (e) { if (live()) rmsg("Не получилось обработать запись на этом устройстве.", true); return; }
+      if (!live()) return;
+      if (r.silent) {
+        // recognition heard the phrase and the recorder got silence: the phone does not share the microphone
+        if (asr && asr.heard) { setMicMode("rec"); rmsg("Запись получилась пустой: микрофон был занят распознаванием. Дальше кнопка микрофона будет записывать голос, а распознавание пропустит."); modeNote(); }
+        else if (!asr) rmsg("В записи тишина. Скажи громче и ближе к микрофону.", true);
+        return;
+      }
+      try { await recSave(ph.k, wavOf(r.pcm, r.rate), r.dur); } catch (e) { if (live()) rmsg("Не получилось сохранить запись: хранилище браузера недоступно или переполнено.", true); return; }
+      recStat();
+      if (!live()) return;
+      if (!asr) rmsg(""); else if (asr.solo) rmsg("Голос записан, распознавание пропущено.");
+      loadTakes();
+    });
+    return run;
+  }
+  recBtn.onclick = () => { if (myRun) { myRun.stop(true); return; } if (ansRec) return; cancelSay(); record(null); };
+  if (REC_OK) {
+    q(".pdic").onclick = () => say(ph.z);
+    q(".pme").onclick = () => playMine();
+    // the announcer, half a second of silence, me
+    q(".pcmp").onclick = () => sayThen(ph.z, () => { const tok = mineTok; setTimeout(() => { if (live() && tok === mineTok) playMine(); }, 500); });
+    modeNote(); loadTakes();
+  }
   // The last attempt is the one that counts: a new one (text changed, microphone pressed, «Очистить»)
   // removes the old result at once, and a check still on its way is dropped.
   let attempt = 0, checked = null, composing = false;
@@ -1517,23 +1769,39 @@ function answerBox(el, ph, opt = {}){
   // quiet: started by the app, not by a tap — a refusal to start is not an error to show
   function listen(quiet){
     if (ansRec) { try { ansRec.stop(); } catch (e) {} return; }
+    if (myRun) { myRun.stop(true); return; }
     if (!SR) return;
     cancelSay();
     drop(); inp.value = "";
+    const mode = REC_OK ? micMode() : "asr";
+    if (mode === "rec") { record(null); return; }
     const at = attempt, mine = () => live() && at === attempt;
     const lang = asrLang, rec = ansRec = recognizer(5, lang);
-    let got = false;
-    btn.classList.add("on"); msg(`Слушаю… Язык распознавания: ${lang}.`);
-    rec.onresult = e => { got = true; if (mine()) check([...e.results[0]].map(a => a.transcript || ""), lang); };
-    rec.onerror = e => { if (e.error !== "aborted" && mine()) { got = true; msg(micError(e), true); } };
+    // the voice is recorded along with the recognition
+    const asr = { heard: false }, run = mode === "both" ? record(asr) : null;
+    let got = false, solo = false;
+    btn.classList.add("on"); rmsg(""); msg(`Слушаю${run ? " и записываю" : ""}… Язык распознавания: ${lang}.`);
+    rec.onresult = e => { got = true; asr.heard = true; if (mine()) check([...e.results[0]].map(a => a.transcript || ""), lang); };
+    rec.onerror = e => {
+      if (e.error === "aborted" || !mine()) return;
+      got = true;
+      // the phone gave the microphone to the recorder only: keep recording, skip the recognition
+      if (run && myRun === run && e.error === "audio-capture") {
+        solo = asr.solo = true; setMicMode("rec"); msg("");
+        rmsg("Микрофон на этом устройстве нельзя отдать сразу и записи, и распознаванию. Записываю голос, распознавание пропущено — говори, остановлю сам после паузы."); modeNote();
+        return;
+      }
+      msg(micError(e), true);
+    };
     rec.onend = () => {
       clearTimeout(guard); btn.classList.remove("on");
       if (ansRec === rec) ansRec = null;
+      if (run && !solo) setTimeout(() => run.stop(true), 300);
       if (!got && mine()) msg("Ничего не услышал — проверь интернет и микрофон и попробуй ещё раз.", true);
     };
     // some browsers never end the session without network: give up after 15 s
     const guard = setTimeout(() => { try { rec.abort(); } catch (e) {} }, 15000);
-    try { rec.start(); } catch (e) { clearTimeout(guard); ansRec = null; btn.classList.remove("on"); msg(quiet ? "" : micError(e), !quiet); }
+    try { rec.start(); } catch (e) { clearTimeout(guard); ansRec = null; btn.classList.remove("on"); if (run) run.stop(false); msg(quiet ? "" : micError(e), !quiet); }
   }
   btn.onclick = () => listen();
   // Keyboard dictation fills the field by itself, and on phones the whole of it is one "composition":
@@ -1553,8 +1821,18 @@ function answerBox(el, ph, opt = {}){
   inp.addEventListener("blur", () => { if (inp.value.trim() && inp.value.trim() !== checked) { clearTimeout(ansTimer); ansTimer = setTimeout(typed, 300); } });
   const reset = () => { if (ansRec) { const r = ansRec; ansRec = null; try { r.abort(); } catch (e) {} } drop(); inp.value = ""; };
   q(".pclr").onclick = () => { reset(); inp.focus(); };
-  return { listen, check, reset, focus(){ inp.focus(); } };
+  return { listen, check, reset, focus(){ inp.focus(); }, reveal(){ el.querySelectorAll(".pdic, .pcmp").forEach(b => { b.hidden = false; }); } };
 }
+
+// «Удалить мои записи»: two taps instead of a system dialog
+$("recdel").onclick = async () => {
+  const b = $("recdel");
+  if (!b.dataset.sure) { b.dataset.sure = 1; b.textContent = "Точно удалить все записи?"; b.classList.add("go"); setTimeout(() => { delete b.dataset.sure; b.textContent = "Удалить мои записи"; b.classList.remove("go"); }, 4000); return; }
+  delete b.dataset.sure; b.textContent = "Удалить мои записи"; b.classList.remove("go");
+  speechStop();
+  try { await recOpen("readwrite", (t, w) => { t.clear(); w.clear(); }); } catch (e) { spMsg("Не получилось удалить записи."); }
+  renderSpeech();
+};
 
 // ---- the screen
 let roleStop = null;
@@ -1571,7 +1849,7 @@ function renderSpeech(){
   $("pgprev").disabled = pgi === 0; $("pgnext").disabled = pgi === G.length - 1;
   store.set("-pron", { lv: plv, g: pgi, i: pi }); store.set("-stab", stab);
   renderReach(); spMsg("");
-  voiceAheadLesson(plv, pgi);
+  voiceAheadLesson(plv, pgi); recStat();
   $("spmain").hidden = !!review; $("sp-review").hidden = !review;
   if (review) { renderReview(); return; }
   document.querySelectorAll("#stabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.t === stab));
@@ -1959,7 +2237,7 @@ function renderReview(){
   }
   const ph = R.list[R.i], prev = srs[ph.k];
   voiceAhead(ph.z);
-  let graded = null, gaveUp = false;
+  let graded = null, gaveUp = false, ab = null;
   box.innerHTML = `<section class="card pcard"><div class="phead"><div class="pnav"><span>Повторение · ${R.i + 1} из ${R.list.length}</span></div><button class="chip close" type="button">Закончить</button></div>`
     + `<div class="revq">${esc(ph.r || "Прочитай фразу вслух")}</div>`
     + `<div class="revans"${ph.r ? " hidden" : ""}><div class="pline"><div class="pz" lang="zh-CN">${esc(ph.z)}</div><button class="speak" type="button" aria-label="Послушать фразу">${ICON}</button></div><div class="ppy">${esc(ph.p)}</div></div>`
@@ -1971,6 +2249,7 @@ function renderReview(){
     R.ok += (ok ? 1 : 0) - (graded && graded.ok ? 1 : 0);
     graded = { ok };
     q(".revans").hidden = false; q(".show").hidden = true; q(".nxt").hidden = false; q(".over").hidden = ok;
+    if (ab) ab.reveal();
     q(".verdict").textContent = ok ? `Верно. Фраза вернётся ${days(n)}.` : gaveUp ? "Ответ показан — фраза вернётся завтра." : "Не совпало — разбор выше. Фраза вернётся завтра.";
     q(".verdict").className = "pmsg verdict" + (ok ? " good" : "");
   };
@@ -1980,7 +2259,7 @@ function renderReview(){
   q(".over").onclick = () => { gaveUp = false; grade(true); };
   q(".nxt").onclick = () => { speechStop(); R.i++; renderReview(); };
   // every attempt is graded anew, the last one counts; after «Не помню» attempts are practice only
-  answerBox(q(".abox"), ph, { label: ph.r ? "Сказать по-китайски" : "Сказать фразу",
+  ab = answerBox(q(".abox"), ph, { label: ph.r ? "Сказать по-китайски" : "Сказать фразу", hideDictor: !!ph.r,
     onResult: res => { if (!gaveUp) grade(res.all); },
     onClear: () => { if (graded && !gaveUp) q(".verdict").textContent = ""; } });
 }
