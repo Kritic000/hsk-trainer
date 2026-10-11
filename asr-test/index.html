@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Тест: распознавание по записи в браузере</title>
+<style>
+:root{--ink:#1f2421;--muted:#6b716d;--line:#dcdfd9;--paper:#f4f5f1;--sheet:#fff;--red:#b5362a;--ok:#2e7d4f;--soft:#f6dcd8}
+*{box-sizing:border-box}
+body{margin:0;font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--paper);color:var(--ink)}
+main{max-width:720px;margin:0 auto;padding:16px 14px 60px;display:grid;gap:14px}
+h1{font-size:1.25rem;margin:4px 0 0}
+h2{font-size:.8rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+p{margin:0}
+.card{background:var(--sheet);border:1px solid var(--line);border-radius:12px;padding:14px;display:grid;gap:10px}
+.muted{color:var(--muted);font-size:.85rem}
+.bad{color:var(--red)} .good{color:var(--ok)}
+label.m{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;cursor:pointer}
+label.m:has(input:checked){border-color:var(--red);background:#fdf6f5}
+label.m b{font-weight:600}
+label.m small{grid-column:2;color:var(--muted)}
+label.m .tag{font-size:.72rem;color:var(--ok);margin-left:6px}
+button{font:inherit;border:1px solid var(--line);background:var(--sheet);border-radius:10px;padding:10px 14px;cursor:pointer;color:var(--ink)}
+button.primary{background:var(--red);border-color:var(--red);color:#fff;font-weight:600}
+button:disabled{opacity:.45;cursor:default}
+button.big{font-size:1.1rem;padding:16px}
+button.big.on{background:var(--ink);border-color:var(--ink)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+progress{width:100%;height:10px}
+select{font:inherit;padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:var(--sheet);width:100%}
+.zh{font-family:"Noto Serif SC","Songti SC",serif}
+.target{font-size:1.9rem;line-height:1.25}
+.py{color:var(--red)}
+.heard{font-size:1.5rem}
+.syl{display:flex;gap:6px;flex-wrap:wrap;list-style:none;margin:0;padding:0}
+.syl li{border:1px solid var(--line);border-radius:8px;padding:4px 8px;text-align:center;min-width:44px;font-size:.8rem}
+.syl li b{display:block;font-size:1.2rem;font-weight:500}
+.syl li.ok{background:#e4f2ea;border-color:var(--ok)} .syl li.tone{background:#fff3d6;border-color:#c79a1b} .syl li.bad{background:var(--soft);border-color:var(--red)}
+.nums{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}
+.nums div{border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.nums b{display:block;font-size:1.25rem}
+table{border-collapse:collapse;width:100%;font-size:.8rem}
+th,td{border-bottom:1px solid var(--line);padding:5px 6px;text-align:left;vertical-align:top}
+th{color:var(--muted);font-weight:500}
+.scroll{overflow-x:auto}
+</style>
+</head>
+<body>
+<main>
+  <h1>Распознавание по записи — тест</h1>
+  <p class="muted">Отдельная страница, приложение «Прописи HSK» она не меняет. Здесь голос сначала записывается, а потом распознаётся моделью прямо в браузере — без службы распознавания Google, поэтому микрофон нужен только один раз. Запись никуда не отправляется.</p>
+
+  <section class="card">
+    <h2>1. Модель</h2>
+    <div id="models" style="display:grid;gap:6px"></div>
+    <div class="row"><button class="primary" id="load">Загрузить модель</button><button id="forget">Удалить скачанные модели</button></div>
+    <progress id="prog" value="0" max="1" hidden></progress>
+    <p id="mstat" class="muted" role="status">Модель скачивается один раз и остаётся в памяти браузера — потом страница работает без интернета.</p>
+  </section>
+
+  <section class="card">
+    <h2>2. Фраза</h2>
+    <select id="phrase" aria-label="Фраза"></select>
+    <div class="target zh" id="tz" lang="zh-CN"></div>
+    <div class="py" id="tp"></div>
+    <div class="muted" id="tr"></div>
+    <button class="primary big" id="rec" disabled>Записать фразу</button>
+    <p id="stat" class="muted" role="status">Сначала загрузи модель.</p>
+  </section>
+
+  <section class="card" id="result" hidden>
+    <h2>3. Результат</h2>
+    <div><span class="muted">Распознано:</span> <span class="heard zh" id="heard" lang="zh-CN"></span></div>
+    <ol class="syl" id="syl"></ol>
+    <div class="nums">
+      <div><span class="muted">Совпадение</span><b id="n-score"></b></div>
+      <div><span class="muted">Распознавание</span><b id="n-time"></b></div>
+      <div><span class="muted">Длина записи</span><b id="n-dur"></b></div>
+      <div><span class="muted">Скорость</span><b id="n-rtf"></b></div>
+    </div>
+    <div class="row"><button id="play">▶ Моя запись</button><button id="again">Распознать эту запись ещё раз</button><button class="primary" id="next">Следующая фраза</button></div>
+  </section>
+
+  <section class="card">
+    <h2>Журнал попыток</h2>
+    <div class="scroll"><table id="log"><thead><tr><th>#</th><th>Модель</th><th>Фраза</th><th>Распознано</th><th>%</th><th>мс</th><th>зап., с</th></tr></thead><tbody></tbody></table></div>
+    <div class="row"><button id="copy">Скопировать журнал</button><button id="clearlog">Очистить журнал</button><span id="avg" class="muted"></span></div>
+    <p class="muted" id="env"></p>
+  </section>
+</main>
+
+<script src="../lib/pinyin-pro.min.js"></script>
+<script src="sherpa/sherpa-onnx-asr.js"></script>
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+const HF = "https://huggingface.co/";
+// WebAssembly build of sherpa-onnx (Apache 2.0), taken from the k2-fsa demo space at a fixed commit; models are loaded separately
+const SHERPA_WASM = HF + "spaces/k2-fsa/web-assembly-vad-asr-sherpa-onnx-zh-zipformer-ctc/resolve/9d5fc71d88ab1222ed1af2274fb194592af48455/sherpa-onnx-wasm-main-vad-asr.wasm";
+const TF_JS = "https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1/dist/transformers.min.js";
+const sherpaRepo = (name, file) => `${HF}csukuangfj/${name}/resolve/main/${file}`;
+const MODELS = [
+  { id: "zip", engine: "sherpa", name: "Zipformer CTC small", mb: 63, lic: "Apache 2.0", note: "Только китайский. Самая быстрая и компактная — с неё стоит начать.",
+    files: { model: sherpaRepo("sherpa-onnx-zipformer-ctc-small-zh-int8-2025-07-16", "model.int8.onnx"), tokens: sherpaRepo("sherpa-onnx-zipformer-ctc-small-zh-int8-2025-07-16", "tokens.txt") },
+    config: f => ({ zipformerCtc: { model: f.model } }) },
+  { id: "dolphin", engine: "sherpa", name: "Dolphin base CTC", mb: 104, lic: "Apache 2.0", note: "Многоязычная (языки Азии), от DataoceanAI.",
+    files: { model: sherpaRepo("sherpa-onnx-dolphin-base-ctc-multi-lang-int8-2025-04-02", "model.int8.onnx"), tokens: sherpaRepo("sherpa-onnx-dolphin-base-ctc-multi-lang-int8-2025-04-02", "tokens.txt") },
+    config: f => ({ dolphin: { model: f.model } }) },
+  { id: "sense", engine: "sherpa", name: "SenseVoice small", mb: 239, lic: "FunASR Model License (можно использовать и распространять с указанием источника)", note: "Самая большая: китайский, английский, японский, корейский, кантонский.",
+    files: { model: sherpaRepo("sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17", "model.int8.onnx"), tokens: sherpaRepo("sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17", "tokens.txt") },
+    config: f => ({ senseVoice: { model: f.model, language: "zh", useInverseTextNormalization: 0 } }) },
+  { id: "wtiny", engine: "whisper", name: "Whisper tiny", mb: 41, lic: "MIT", note: "Многоязычная от OpenAI, через transformers.js. Для сравнения: заметно медленнее и пишет традиционными знаками.", repo: "onnx-community/whisper-tiny" },
+];
+const PHRASES = [
+  ["你会说汉语吗？", "Nǐ huì shuō Hànyǔ ma?", "Ты говоришь по-китайски?"],
+  ["关老师是哪国人？", "Guān lǎoshī shì nǎ guó rén?", "Учитель Гуань из какой страны?"],
+  ["你叫什么名字？", "Nǐ jiào shénme míngzi?", "Как тебя зовут?"],
+  ["她是我的汉语老师。", "Tā shì wǒ de Hànyǔ lǎoshī.", "Она мой учитель китайского."],
+  ["你家有几口人？", "Nǐ jiā yǒu jǐ kǒu rén?", "Сколько человек в твоей семье?"],
+  ["我女儿今年四岁了。", "Wǒ nǚ'ér jīnnián sì suì le.", "Моей дочери в этом году четыре года."],
+  ["我会做中国菜。", "Wǒ huì zuò Zhōngguó cài.", "Я умею готовить китайскую еду."],
+  ["你想喝什么？", "Nǐ xiǎng hē shénme?", "Что ты хочешь пить?"],
+  ["我想喝茶。", "Wǒ xiǎng hē chá.", "Я хочу чаю."],
+  ["这个杯子多少钱？", "Zhège bēizi duōshao qián?", "Сколько стоит эта чашка?"],
+  ["小猫在椅子下面。", "Xiǎo māo zài yǐzi xiàmiàn.", "Котёнок под стулом."],
+  ["我在医院工作。", "Wǒ zài yīyuàn gōngzuò.", "Я работаю в больнице."],
+  ["现在几点了？", "Xiànzài jǐ diǎn le?", "Который сейчас час?"],
+  ["明天天气怎么样？", "Míngtiān tiānqì zěnmeyàng?", "Какая завтра погода?"],
+  ["不，没关系。", "Bù, méi guānxi.", "Нет, ничего страшного."],
+  ["谢谢你！", "Xièxie nǐ!", "Спасибо тебе!"],
+];
+
+// ---- page state
+let model = null;        // the loaded model: { m, run(Float32Array 16 kHz) → text }
+let last = null;         // the last recording: { pcm, dur, wav }
+const log = [];
+const stat = (t, cls) => { $("stat").textContent = t; $("stat").className = cls || "muted"; };
+const mstat = (t, cls) => { $("mstat").textContent = t; $("mstat").className = cls || "muted"; };
+const hanOf = s => [...(s || "")].filter(ch => /\p{Script=Han}/u.test(ch)).join("");
+// let the message appear before a long computation (a hidden tab gets no frames: do not wait for one for ever)
+const paint = () => new Promise(r => { requestAnimationFrame(() => setTimeout(r, 0)); setTimeout(r, 150); });
+
+// ---- models: downloaded once into the browser cache, with progress
+const MODEL_CACHE = "asr-test-models";
+async function cachedFetch(url, onProgress){
+  const cache = await caches.open(MODEL_CACHE), hit = await cache.match(url);
+  if (hit) return new Uint8Array(await hit.arrayBuffer());
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`${res.status} ${url.split("/").pop()}`);
+  // one copy of the stream goes into the cache, the other is read here with progress
+  const saved = cache.put(url, res.clone()).then(() => true, e => { console.warn("cache", e); return false; });
+  const total = +res.headers.get("content-length") || 0, reader = res.body.getReader(), parts = [];
+  let got = 0;
+  for (;;) { const { done, value } = await reader.read(); if (done) break; parts.push(value); got += value.length; if (onProgress) onProgress(got, total); }
+  const buf = new Uint8Array(got); let off = 0;
+  for (const p of parts) { buf.set(p, off); off += p.length; }
+  await saved;
+  return buf;
+}
+async function isCached(m){
+  try {
+    if (m.engine === "sherpa") { const c = await caches.open(MODEL_CACHE); return (await Promise.all(Object.values(m.files).map(u => c.match(u)))).every(Boolean); }
+    const c = await caches.open("transformers-cache"), keys = await c.keys();
+    return keys.some(r => r.url.includes(m.repo + "/") && r.url.endsWith(".onnx"));
+  } catch (e) { return false; }
+}
+
+// ---- sherpa-onnx: one WebAssembly runtime, model files are written into its file system
+let sherpa = null, sherpaFiles = [], sherpaRec = null;
+function sherpaInit(onProgress){
+  return sherpa || (sherpa = (async () => {
+    const wasm = await cachedFetch(SHERPA_WASM, onProgress);
+    await new Promise((ok, no) => {
+      window.Module = {
+        wasmBinary: wasm, locateFile: p => "sherpa/" + p,
+        // the demo's 368 MB model package is not downloaded: its files are created empty and never used
+        getPreloadedPackage: () => new ArrayBuffer(0),
+        onRuntimeInitialized: ok, onAbort: e => no(new Error("wasm: " + e)), setStatus(){}, print(){}, printErr: t => console.warn(t),
+      };
+      const s = document.createElement("script"); s.src = "sherpa/sherpa-onnx-wasm-main-vad-asr.js"; s.onerror = () => no(new Error("не загрузился sherpa-onnx")); document.head.appendChild(s);
+    });
+  })().catch(e => { sherpa = null; throw e; }));
+}
+async function loadSherpa(m, onProgress){
+  const data = {}, names = Object.keys(m.files);
+  for (const k of names) data[k] = await cachedFetch(m.files[k], (g, t) => onProgress(k === "model" ? g : 0, k === "model" ? t : 0));
+  await sherpaInit(onProgress);
+  if (sherpaRec) { sherpaRec.free(); sherpaRec = null; }
+  for (const f of sherpaFiles) { try { Module.FS_unlink(f); } catch (e) {} }
+  sherpaFiles = [];
+  const path = {};
+  for (const k of names) { const f = `/${m.id}-${k}`; Module.FS_createDataFile("/", f.slice(1), data[k], true, true, true); sherpaFiles.push(f); path[k] = f; data[k] = null; }
+  sherpaRec = new OfflineRecognizer({ modelConfig: { ...m.config(path), tokens: path.tokens, numThreads: 1, provider: "cpu", debug: 0 } }, Module);
+  if (!sherpaRec.handle) throw new Error("модель не создалась");
+  return pcm => {
+    const s = sherpaRec.createStream();
+    s.acceptWaveform(16000, pcm); sherpaRec.decode(s);
+    const text = sherpaRec.getResult(s).text || "";
+    s.free();
+    return text;
+  };
+}
+// ---- Whisper through transformers.js (onnxruntime-web)
+let tf = null;
+async function loadWhisper(m, onProgress){
+  tf = tf || await import(TF_JS);
+  const sizes = {};
+  const asr = await tf.pipeline("automatic-speech-recognition", m.repo, { dtype: "q8", device: "wasm", progress_callback: p => {
+    if (p.status === "progress" && /\.onnx$/.test(p.file || "")) { sizes[p.file] = [p.loaded, p.total]; const v = Object.values(sizes); onProgress(v.reduce((s, x) => s + x[0], 0), v.reduce((s, x) => s + x[1], 0)); }
+  } });
+  return async pcm => (await asr(pcm, { language: "chinese", task: "transcribe", max_new_tokens: 48 })).text || "";
+}
+
+function drawModels(){
+  $("models").innerHTML = MODELS.map((m, i) => `<label class="m"><input type="radio" name="m" value="${m.id}"${i === 0 ? " checked" : ""}><span><b>${m.name}</b> · ${m.mb} МБ<span class="tag" id="tag-${m.id}"></span></span><small>${m.note} Лицензия: ${m.lic}.</small></label>`).join("");
+  MODELS.forEach(async m => { if (await isCached(m)) $("tag-" + m.id).textContent = "скачана"; });
+}
+const chosen = () => MODELS.find(m => m.id === document.querySelector('input[name="m"]:checked').value);
+async function loadModel(){
+  const m = chosen();
+  $("load").disabled = true; $("rec").disabled = true; model = null;
+  const prog = $("prog"); prog.hidden = false; prog.removeAttribute("value");
+  const t0 = performance.now();
+  mstat(`Загружаю «${m.name}»…`);
+  const onProgress = (got, total) => { if (total) { prog.max = total; prog.value = got; mstat(`Скачиваю «${m.name}»: ${(got / 1e6).toFixed(0)} из ${(total / 1e6).toFixed(0)} МБ`); } };
+  try {
+    const run = m.engine === "sherpa" ? await loadSherpa(m, onProgress) : await loadWhisper(m, onProgress);
+    mstat(`«${m.name}»: готовлю модель…`); prog.removeAttribute("value"); await paint();
+    // the first run is slower: do it now, on a second of silence
+    const tw = performance.now(); await run(new Float32Array(16000));
+    model = { m, run };
+    const kept = await isCached(m);
+    mstat(`«${m.name}» готова. Загрузка ${((tw - t0) / 1000).toFixed(1)} с, первый прогон ${Math.round(performance.now() - tw)} мс.` + (kept ? "" : " В память браузера она не сохранилась (мало места?) — в следующий раз скачается заново."), kept ? "good" : "");
+    $("tag-" + m.id).textContent = kept ? "скачана" : "";
+    $("rec").disabled = false; stat("Нажми «Записать фразу» и скажи её. Остановлю сам после паузы.");
+  } catch (e) {
+    console.error(e);
+    mstat(`Не получилось загрузить «${m.name}»: ${e && e.message || e}`, "bad");
+  }
+  prog.hidden = true; $("load").disabled = false;
+}
+$("load").onclick = loadModel;
+$("forget").onclick = async () => {
+  for (const n of [MODEL_CACHE, "transformers-cache"]) await caches.delete(n);
+  mstat("Скачанные модели удалены из памяти браузера."); drawModels();
+};
+
+// ---- phrases
+function drawPhrase(){
+  const [z, p, r] = PHRASES[$("phrase").value];
+  $("tz").textContent = z; $("tp").textContent = p; $("tr").textContent = r;
+}
+$("phrase").innerHTML = PHRASES.map((p, i) => `<option value="${i}">${i + 1}. ${p[0]}</option>`).join("");
+$("phrase").onchange = () => { drawPhrase(); $("result").hidden = true; };
+drawPhrase();
+
+// ---- recording: until a pause after speech, 15 s at most; then mono 16 kHz without the silence at both ends
+const AC = window.AudioContext || window.webkitAudioContext;
+let actx = null, recRun = null;
+function audioCtx(){ actx = actx || new AC(); if (actx.state === "suspended") actx.resume().catch(() => {}); return actx; }
+function record(){
+  let finished = false, mr = null, stream = null, src = null, timer = 0, resolve, reject;
+  const chunks = [];
+  const close = () => { clearInterval(timer); if (stream) stream.getTracks().forEach(t => t.stop()); if (src) { try { src.disconnect(); } catch (e) {} } };
+  const run = { stop(){ if (finished) return; finished = true; clearInterval(timer); if (mr && mr.state !== "inactive") mr.stop(); else { close(); reject(new Error("микрофон не успел включиться")); } } };
+  run.result = new Promise((ok, no) => { resolve = ok; reject = no; });
+  navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false } }).then(s => {
+    stream = s;
+    if (finished) { close(); return; }
+    mr = new MediaRecorder(s);
+    mr.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+    mr.onstop = () => { close(); chunks.length ? resolve(new Blob(chunks, { type: mr.mimeType || chunks[0].type })) : reject(new Error("микрофон ничего не записал")); };
+    mr.start();
+    const ac = audioCtx(), an = ac.createAnalyser(); an.fftSize = 1024;
+    src = ac.createMediaStreamSource(s); src.connect(an);
+    const buf = new Float32Array(an.fftSize), t0 = performance.now();
+    let noise = 0.004, spoke = false, lastVoice = 0;
+    timer = setInterval(() => {
+      const t = performance.now() - t0;
+      if (t > 15000) { run.stop(); return; }
+      if (ac.state !== "running") return;
+      an.getFloatTimeDomainData(buf);
+      let rms = 0; for (const v of buf) rms += v * v; rms = Math.sqrt(rms / buf.length);
+      if (t < 250) { noise = Math.max(noise, rms); return; }
+      if (rms > Math.max(0.012, noise * 2.5)) { spoke = true; lastVoice = t; }
+      if ((spoke && t - lastVoice > 1200) || (!spoke && t > 7000)) run.stop();
+    }, 50);
+  }, e => { finished = true; reject(new Error(e.name === "NotAllowedError" ? "нет доступа к микрофону — разреши его для этого сайта" : "микрофон не включился (" + e.name + ")")); });
+  return run;
+}
+async function toPcm(blob){
+  const raw = await blob.arrayBuffer();
+  const ab = await new Promise((ok, no) => { const p = audioCtx().decodeAudioData(raw, ok, no); if (p && p.catch) p.catch(no); });
+  const off = new OfflineAudioContext(1, Math.max(1, Math.ceil(ab.duration * 16000)), 16000), s = off.createBufferSource();
+  s.buffer = ab; s.connect(off.destination); s.start();
+  const x = (await off.startRendering()).getChannelData(0), F = 320, e = [];
+  let top = 0;
+  for (let i = 0; i + F <= x.length; i += F) { let q = 0; for (let j = i; j < i + F; j++) q += x[j] * x[j]; const v = Math.sqrt(q / F); e.push(v); if (v > top) top = v; }
+  if (top < 0.004) throw new Error("в записи тишина — скажи громче и ближе к микрофону");
+  const thr = Math.max(0.003, top * 0.08), a = e.findIndex(v => v > thr);
+  let b = e.length - 1; while (b > a && e[b] <= thr) b--;
+  const pcm = x.slice(Math.max(0, a * F - 3200), Math.min(x.length, (b + 1) * F + 4800));
+  let peak = 0; for (const v of pcm) peak = Math.max(peak, Math.abs(v));
+  const g = Math.min(0.9 / peak, 10); for (let i = 0; i < pcm.length; i++) pcm[i] *= g;
+  return pcm;
+}
+function wavOf(pcm){
+  const b = new ArrayBuffer(44 + pcm.length * 2), v = new DataView(b), str = (o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+  str(0, "RIFF"); v.setUint32(4, 36 + pcm.length * 2, true); str(8, "WAVEfmt "); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+  v.setUint32(24, 16000, true); v.setUint32(28, 32000, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); str(36, "data"); v.setUint32(40, pcm.length * 2, true);
+  for (let i = 0; i < pcm.length; i++) v.setInt16(44 + i * 2, Math.max(-1, Math.min(1, pcm[i])) * 32767, true);
+  return new Blob([b], { type: "audio/wav" });
+}
+
+// ---- comparison by syllables, the same rule as in the app: the same syllable and tone — right,
+// another tone — half, another syllable or a missing one — wrong
+function compare(want, heard){
+  const py = t => { const r = pinyinPro.pinyin(t, { type: "array", toneType: "num" }); return r.length === [...t].length ? r : [...t].map(ch => pinyinPro.pinyin(ch, { type: "array", toneType: "num" })[0] || ch); };
+  const sym = t => pinyinPro.pinyin(t, { type: "array", toneType: "symbol" });
+  const a = [...want], b = [...heard], A = py(want), B = py(heard), base = y => y.replace(/\d/g, ""), tone = y => (y.match(/\d/) || ["0"])[0];
+  const cost = (i, j) => a[i] === b[j] ? 0 : base(A[i]) !== base(B[j]) ? 1 : (tone(A[i]) === tone(B[j]) || tone(A[i]) === "0" || tone(B[j]) === "0") ? 0 : .5;
+  const n = a.length, m = b.length, D = Array.from({ length: n + 1 }, (_, i) => { const r = Array(m + 1).fill(0); r[0] = i; return r; });
+  for (let j = 1; j <= m; j++) D[0][j] = j;
+  for (let i = 1; i <= n; i++) for (let j = 1; j <= m; j++) D[i][j] = Math.min(D[i - 1][j - 1] + cost(i - 1, j - 1), D[i - 1][j] + 1, D[i][j - 1] + 1);
+  const syl = Array(n), wantSym = sym(want), gotSym = sym(heard);
+  for (let i = n, j = m; i > 0;) {
+    const c = j > 0 ? cost(i - 1, j - 1) : 0;
+    if (j > 0 && D[i][j] === D[i - 1][j - 1] + c) { syl[i - 1] = { h: a[i - 1], y: wantSym[i - 1] || "", st: c === 0 ? "ok" : c < 1 ? "tone" : "bad", got: b[j - 1] + " " + (gotSym[j - 1] || "") }; i--; j--; }
+    else if (D[i][j] === D[i - 1][j] + 1) { syl[i - 1] = { h: a[i - 1], y: wantSym[i - 1] || "", st: "bad", got: "не слышно" }; i--; }
+    else j--;
+  }
+  return { syl, pct: Math.round(100 * syl.reduce((s, o) => s + (o.st === "ok" ? 1 : o.st === "tone" ? .5 : 0), 0) / n) };
+}
+
+// ---- one attempt
+async function recognize(){
+  const [z] = PHRASES[$("phrase").value];
+  stat("Распознаю…"); $("rec").disabled = true; await paint();
+  try {
+    const t0 = performance.now(), text = (await model.run(last.pcm)).trim(), ms = Math.round(performance.now() - t0);
+    const heard = hanOf(text), res = heard ? compare(hanOf(z), heard) : { syl: [], pct: 0 };
+    $("result").hidden = false;
+    $("heard").textContent = text || "— ничего —";
+    $("syl").innerHTML = res.syl.map(o => `<li class="${o.st}"><b class="zh">${o.h}</b>${o.y}<br>${o.st === "ok" ? "✓" : o.got}</li>`).join("");
+    $("n-score").textContent = res.pct + "%"; $("n-score").className = res.pct === 100 ? "good" : res.pct < 60 ? "bad" : "";
+    $("n-time").textContent = ms + " мс"; $("n-dur").textContent = last.dur.toFixed(1) + " с";
+    $("n-rtf").textContent = "×" + (last.dur * 1000 / Math.max(ms, 1)).toFixed(1) + " от записи";
+    log.push({ model: model.m.name, z, text, pct: res.pct, ms, dur: last.dur }); drawLog();
+    stat("Готово. Можно записать ещё раз или перейти к следующей фразе.");
+  } catch (e) { console.error(e); stat("Не получилось распознать: " + (e && e.message || e), "bad"); }
+  $("rec").disabled = false;
+}
+$("rec").onclick = async () => {
+  if (recRun) { recRun.stop(); return; }
+  if (!model) return;
+  const btn = $("rec"), run = recRun = record();
+  btn.textContent = "Стоп"; btn.classList.add("on"); stat("Записываю — говори. Остановлю сам после паузы.");
+  try {
+    const blob = await run.result;
+    recRun = null; btn.textContent = "Записать фразу"; btn.classList.remove("on");
+    stat("Обрабатываю запись…"); await paint();
+    const pcm = await toPcm(blob);
+    last = { pcm, dur: pcm.length / 16000, wav: wavOf(pcm) };
+    await recognize();
+  } catch (e) {
+    recRun = null; btn.textContent = "Записать фразу"; btn.classList.remove("on");
+    stat("Запись не получилась: " + (e && e.message || e), "bad");
+  }
+};
+$("again").onclick = () => { if (model && last) recognize(); };
+$("next").onclick = () => { const s = $("phrase"); s.value = (+s.value + 1) % PHRASES.length; s.onchange(); window.scrollTo({ top: s.getBoundingClientRect().top + scrollY - 12, behavior: "smooth" }); };
+let playUrl = "";
+$("play").onclick = () => { if (!last) return; if (playUrl) URL.revokeObjectURL(playUrl); playUrl = URL.createObjectURL(last.wav); new Audio(playUrl).play().catch(() => {}); };
+
+function drawLog(){
+  $("log").tBodies[0].innerHTML = log.map((r, i) => `<tr><td>${i + 1}</td><td>${r.model}</td><td class="zh">${r.z}</td><td class="zh">${r.text || "—"}</td><td>${r.pct}</td><td>${r.ms}</td><td>${r.dur.toFixed(1)}</td></tr>`).join("");
+  const by = {};
+  log.forEach(r => { (by[r.model] = by[r.model] || []).push(r); });
+  $("avg").textContent = Object.entries(by).map(([m, a]) => `${m}: ${a.length} поп., в среднем ${Math.round(a.reduce((s, r) => s + r.pct, 0) / a.length)}%, ${Math.round(a.reduce((s, r) => s + r.ms, 0) / a.length)} мс`).join(" · ");
+  try { sessionStorage.setItem("asr-test-log", JSON.stringify(log)); } catch (e) {}
+}
+$("copy").onclick = async () => {
+  const text = ["#\tмодель\tфраза\tраспознано\t%\tмс\tзапись, с", ...log.map((r, i) => [i + 1, r.model, r.z, r.text, r.pct, r.ms, r.dur.toFixed(1)].join("\t")), "", $("env").textContent].join("\n");
+  try { await navigator.clipboard.writeText(text); $("copy").textContent = "Скопировано"; } catch (e) { $("copy").textContent = "Не скопировалось — выдели таблицу вручную"; }
+  setTimeout(() => { $("copy").textContent = "Скопировать журнал"; }, 2500);
+};
+$("clearlog").onclick = () => { log.length = 0; drawLog(); };
+try { log.push(...JSON.parse(sessionStorage.getItem("asr-test-log") || "[]")); } catch (e) {}
+
+drawModels(); drawLog();
+$("env").textContent = `Устройство: ${navigator.userAgent.replace(/^Mozilla\/5\.0 /, "")} · потоков: ${navigator.hardwareConcurrency || "?"} · память: ${navigator.deviceMemory || "?"} ГБ`;
+if (!navigator.mediaDevices || !window.MediaRecorder) stat("В этом браузере нет записи с микрофона.", "bad");
+// its own service worker: the page, the libraries and the models' runtime stay available offline
+if ("serviceWorker" in navigator && location.protocol !== "file:") navigator.serviceWorker.register("sw.js").catch(() => {});
+</script>
+</body>
+</html>

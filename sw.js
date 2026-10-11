@@ -11,7 +11,7 @@
 // voice — data/voice-*.json and voice-*.mp3 (phrases read by a neural voice, made by tools/voice.py): its own cache.
 // VOICE_VERSION — when voice files change
 // (each together with the same number in DATA_CACHE / SENT_CACHE / SPEECH_CACHE / VOICE_CACHE in index.html).
-const SHELL_VERSION = 15;
+const SHELL_VERSION = 16;
 const DATA_VERSION = 2;
 const SENT_VERSION = 2;
 const SPEECH_VERSION = 3;
@@ -94,6 +94,8 @@ self.addEventListener("fetch", e => {
   if (req.method !== "GET") return;
   const url = new URL(req.url);
   if (url.origin !== location.origin) return;
+  // the recognition test page lives on its own: its own service worker, nothing of it in our caches
+  if (url.pathname.includes("/asr-test/")) return;
   if (req.mode === "navigate") return e.respondWith(page(req));
   const isData = /\/data\/[^/]+\.json$/.test(url.pathname);
   e.respondWith(cacheFirst(req, isVoice(url.pathname) ? VOICE : isSentences(url.pathname) ? SENT : isSpeech(url.pathname) ? SPEECH : isData ? DATA : SHELL));
