@@ -1925,7 +1925,7 @@ function renderReview(){
 document.querySelectorAll("#bnav button").forEach(b => b.onclick = () => { if (section === b.dataset.s) return; section = b.dataset.s; update(); window.scrollTo({ top: 0 }); });
 
 // ---- offline (PWA). DATA_CACHE / SENT_CACHE / SPEECH_CACHE must match DATA / SENT / SPEECH in sw.js
-const DATA_CACHE = "propisi-data-v1";
+const DATA_CACHE = "propisi-data-v2";
 const SENT_CACHE = "propisi-sent-v2";
 const SPEECH_CACHE = "propisi-speech-v3";
 const cacheFor = u => caches.open(/sentences-/.test(u) ? SENT_CACHE : /speech-/.test(u) ? SPEECH_CACHE : DATA_CACHE);

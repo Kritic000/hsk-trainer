@@ -94,6 +94,19 @@ npm run show -- 好 学 会    # посмотреть, что получилос
 Формулы до трёх знаков (`你好`, `谢谢你`) не считаются. Имена героев и их пиньинь — таблица `NAMES` в `speech.mjs`.
 Новый уровень: добавить `speech/hskN.txt` и номер уровня в `SPEECH_IDS` в `index.html`.
 
+## Громкость записей слогов
+
+`data/audio-N.json` — записи слогов (mp3 в base64). Их громкость выровнена скриптом `audio-gain.py`:
+он сдвигает поле `global_gain` в кадрах mp3 (шаг 1,5 дБ), без перекодирования — качество и размер
+файлов не меняются. Нужен Python с `numpy` и `imageio-ffmpeg` (ffmpeg только измеряет уровень).
+
+```
+python tools/audio-gain.py          # показать, что изменится
+python tools/audio-gain.py --write  # записать
+```
+
+После записи поднимите `DATA_VERSION` в `sw.js` и `DATA_CACHE` в `index.html`.
+
 ## Источники и лицензии
 
 - Предложения: [Tatoeba](https://tatoeba.org), CC-BY 2.0 FR (у каждого примера в приложении ссылка
