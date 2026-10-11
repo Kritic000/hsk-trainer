@@ -271,7 +271,8 @@ path.old{fill:var(--ghost)} path.new{fill:var(--cinnabar)} path.all{fill:var(--s
 .pans .pmic svg{width:18px;height:18px}
 .pans .pmic.on{background:var(--ink);border-color:var(--ink)}
 .ptext,.mform input,.mform textarea{font:inherit;font-size:1.05rem;padding:9px 12px;border:1px solid var(--line);border-radius:var(--r);background:var(--sheet);color:var(--ink)}
-.ptext{flex:1 1 240px;min-width:0}
+.ptext{flex:1 1 180px;min-width:0}
+.pans .pclr,.speech .mform .actions .btn{flex:0 0 auto}
 .ptext:focus,.mform input:focus,.mform textarea:focus{outline:2px solid var(--cinnabar);outline-offset:1px;border-color:transparent}
 .ptext::placeholder,.mform ::placeholder{color:var(--muted);font-size:.9rem}
 .pmsg{margin:0;font-size:.9rem;color:var(--muted);line-height:1.5}
@@ -534,7 +535,7 @@ path.old{fill:var(--ghost)} path.new{fill:var(--cinnabar)} path.all{fill:var(--s
           <label class="sr" for="mtext">Текст диалога</label>
           <textarea id="mtext" lang="zh-CN" spellcheck="false" placeholder="A: 你好！你叫什么名字？&#10;B: 我叫…"></textarea>
           <p class="pmsg" id="mmsg" role="status"></p>
-          <div class="actions"><button class="btn primary" id="madd" type="button">Добавить диалог</button></div>
+          <div class="actions"><button class="btn primary" id="madd" type="button">Добавить диалог</button><button class="btn" id="mclear" type="button">Очистить</button></div>
         </section>
         <section class="card mfile">
           <h2 class="sub">Сохранить в файл</h2>
@@ -618,21 +619,43 @@ function loadSentences(l){
 
 // ---- sound
 const urls = {};
-let zhVoice = null;
-function pickVoice(){ try { const v = speechSynthesis.getVoices(); zhVoice = v.find(x => /^zh(-|_)CN/i.test(x.lang)) || v.find(x => /^zh/i.test(x.lang)) || null; } catch (e) {} }
+const NO_VOICE = "На этом устройстве нет китайского голоса. Открой приложение в Chrome или установи китайский голос в настройках синтеза речи.";
+let zhVoice = null, voicesSeen = false, voiceGuard = 0;
+function pickVoice(){ try { const v = speechSynthesis.getVoices(); if (v.length) voicesSeen = true; zhVoice = v.find(x => /^zh(-|_)CN/i.test(x.lang)) || v.find(x => /^zh/i.test(x.lang)) || null; } catch (e) {} }
 try { pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; } catch (e) {}
+// the phone voice is certainly silent: no speech synthesis at all, or its voices are known and none is Chinese
+function noZhVoice(){
+  if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) return true;
+  pickVoice();
+  return voicesSeen && !zhVoice;
+}
+// the warning goes to the message line of the open section; it is taken away when the voice does start
+function voiceWarn(on){
+  const speech = section === "speech", el = $(speech ? "spmsg" : "status");
+  if (on) { if (speech) spMsg(NO_VOICE); else setStatus(NO_VOICE, "bad"); }
+  else if (el.textContent === NO_VOICE) { if (speech) spMsg(""); else setStatus(""); }
+}
+// some browsers list no voices and just stay silent: an utterance that has not started in 3 s counts as no voice
+function watchVoice(u){
+  clearTimeout(voiceGuard);
+  const g = voiceGuard = setTimeout(() => voiceWarn(true), 3000);
+  u.addEventListener("start", () => { clearTimeout(g); voiceWarn(false); });
+  u.addEventListener("end", () => clearTimeout(g));
+  u.addEventListener("error", e => { clearTimeout(g); if (e.error !== "interrupted" && e.error !== "canceled") voiceWarn(true); });
+}
 function tts(text, rate){
   try {
-    if (!("speechSynthesis" in window)) return false;
+    if (noZhVoice()) { voiceWarn(true); return false; }
     speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text); u.lang = "zh-CN"; u.rate = rate || .8; if (zhVoice) u.voice = zhVoice;
+    watchVoice(u);
     speechSynthesis.speak(u); return true;
-  } catch (e) { return false; }
+  } catch (e) { voiceWarn(true); return false; }
 }
 function playChar(c, btn){
   const it = IT[c];
   // neutral-tone characters (们, 么, 吧, 啊) have no correct recording: the phone voice reads them in a word
-  if (it && it.say) { if (!tts(it.say)) setStatus("На этом устройстве нет китайского голоса для озвучки.", "bad"); return; }
+  if (it && it.say) { tts(it.say); return; }
   const b64 = it && it.a && AUDIO[it.a];
   if (b64) {
     if (!urls[it.a]) { const bin = atob(b64), arr = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i); urls[it.a] = URL.createObjectURL(new Blob([arr], { type: "audio/mpeg" })); }
@@ -641,7 +664,7 @@ function playChar(c, btn){
     a.play().catch(() => { if (btn) btn.classList.remove("playing"); tts(c); });
     return;
   }
-  if (!tts(c)) setStatus("На этом устройстве нет китайского голоса для озвучки.", "bad");
+  tts(c);
 }
 
 // ---- render: levels
@@ -713,7 +736,7 @@ function renderInfo(){
   const wordBlock = (w, wp, wm, id) => `<span class="han" style="font-size:1.1em">${esc(w)}</span>` + (wp ? `<span class="wp">${esc(wp)}</span>` : "")
     + (wm ? `<span class="wm">${esc(wm)}</span>` : "") + (w.length > 1 || w !== c ? `<button class="speak sm" id="${id}" aria-label="Послушать слово">${ICON}</button>` : "")
     + (MIC_OK && wp && (w.length > 1 || w !== c) ? `<button class="speak sm mic" id="${id}m" aria-label="Скажи слово вслух" title="Скажи вслух">${MIC}</button>` : "");
-  const sayWord = w => () => { if (!tts(w)) setStatus("На этом устройстве нет китайского голоса для озвучки слов.", "bad"); };
+  const sayWord = w => () => { tts(w); };
   const micFor = (id, w, wp) => { if ($(id + "m")) $(id + "m").onclick = () => practice(w, wp); };
   $("sayme").hidden = !MIC_OK; $("sayme").onclick = () => practice(c, it.p);
   if (!voiceRun) $("voice").hidden = true;
@@ -768,7 +791,7 @@ function renderSents(){
       + `<button class="speak sm" aria-label="Послушать предложение">${ICON}</button>`
       + `<div class="sp">${esc(s.p)}</div><div class="st">${esc(s.r)}${src}</div>`
       + `<button class="peek" type="button">Показать пиньинь и перевод</button>`;
-    li.querySelector(".speak").onclick = () => { if (!tts(s.z, .85)) setStatus("На этом устройстве нет китайского голоса для озвучки предложений.", "bad"); };
+    li.querySelector(".speak").onclick = () => { tts(s.z, .85); };
     li.querySelector(".peek").onclick = () => li.classList.add("open");
     ol.appendChild(li);
   });
@@ -1023,8 +1046,10 @@ function recognizer(alternatives, lang = asrLang){
 }
 // what came back: Chinese, Russian, Latin or nothing
 const scriptOf = t => /\p{Script=Han}/u.test(t) ? "han" : /[А-Яа-яЁё]/.test(t) ? "cyr" : /[A-Za-z]/.test(t) ? "lat" : "";
+const RU_ASR = "Похоже, браузер распознаёт по-русски. Открой приложение в Chrome.";
 function wrongLangHelp(script){
-  return `<b>Телефон распознаёт ${script === "cyr" ? "по-русски" : "не по-китайски"}.</b> Добавь китайский в языки голосового ввода:<br>`
+  if (script === "cyr") return RU_ASR;
+  return `<b>Телефон распознаёт не по-китайски.</b> Добавь китайский в языки голосового ввода:<br>`
     + `<b>Android:</b> Настройки → Система → Язык и ввод → Голосовой ввод Google (или Gboard → Голосовой ввод) → Языки → «中文（中国大陆）» / «Китайский (упрощённое письмо)».<br>`
     + `<b>iPhone:</b> Настройки → Основные → Клавиатура → Клавиатуры → Новая клавиатура → «Китайский (упрощённый)»; там же включи «Диктовку».<br>`
     + `Потом нажми микрофон ещё раз.`;
@@ -1175,9 +1200,12 @@ async function practice(target, py){
     if (script === "cyr" || script === "lat") {
       const next = ASR_LANGS[ASR_LANGS.indexOf(lang) + 1];
       heard.className = "vheard help";
-      if (next) {
+      if (script === "cyr") {
+        setAsrLang(next || ASR_LANGS[0]);
+        heard.textContent = `Распознано «${alts[0]}». ${RU_ASR}`;
+      } else if (next) {
         setAsrLang(next);
-        heard.innerHTML = `Распознано «${esc(alts[0])}» — телефон ответил ${script === "cyr" ? "по-русски" : "не по-китайски"} на код ${lang}. Переключил на <b>${next}</b>: нажми микрофон и скажи ещё раз.`;
+        heard.innerHTML = `Распознано «${esc(alts[0])}» — телефон ответил не по-китайски на код ${lang}. Переключил на <b>${next}</b>: нажми микрофон и скажи ещё раз.`;
       } else {
         setAsrLang(ASR_LANGS[0]);
         heard.innerHTML = `Распознано «${esc(alts[0])}» (${lang}). ` + wrongLangHelp(script);
@@ -1295,21 +1323,24 @@ const spMsg = t => { $("spmsg").textContent = t || ""; };
 // ---- speaking: one phrase at a time, with a callback when the voice has finished
 let sayCancel = null;
 function cancelSay(){ if (sayCancel) { const c = sayCancel; sayCancel = null; c(); } }
-function say(z){ cancelSay(); spMsg(tts(z, .85) ? "" : "На этом устройстве нет китайского голоса для озвучки."); }
+function say(z){ cancelSay(); spMsg(""); tts(z, .85); }
 function sayThen(text, cb){
   cancelSay();
   let fired = false;
   const go = () => { if (fired) return; fired = true; clearTimeout(t); sayCancel = null; cb(); };
   // some phones never report the end of speech: move on by the clock
   const t = setTimeout(go, 2500 + [...text].length * 700);
-  sayCancel = () => { fired = true; clearTimeout(t); try { speechSynthesis.cancel(); } catch (e) {} };
+  sayCancel = () => { fired = true; clearTimeout(t); clearTimeout(voiceGuard); try { speechSynthesis.cancel(); } catch (e) {} };
+  // no voice: say so and move on by the clock — the learner reads the line silently
+  if (noZhVoice()) { voiceWarn(true); return; }
   try {
     speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text); u.lang = "zh-CN"; u.rate = .85; if (zhVoice) u.voice = zhVoice;
     u.onend = go;
-    u.onerror = e => { if (e.error === "interrupted" || e.error === "canceled") return; spMsg("Озвучка на этом устройстве не сработала — прочитай реплику сам."); go(); };
+    u.onerror = e => { if (e.error === "interrupted" || e.error === "canceled") return; go(); };
+    watchVoice(u);
     speechSynthesis.speak(u);
-  } catch (e) { clearTimeout(t); setTimeout(go, 400); }
+  } catch (e) { voiceWarn(true); }
 }
 
 // ---- comparison by syllables
@@ -1376,26 +1407,37 @@ function answerBox(el, ph, opt = {}){
   answerStop();
   const my = ansSeq, live = () => my === ansSeq && el.isConnected;
   el.innerHTML = `<div class="pans"><button class="btn primary pmic" type="button"${SR ? "" : " hidden"}>${MIC}<span>${opt.label || "Сказать фразу"}</span></button>`
-    + `<input class="ptext" type="text" lang="zh-CN" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="done" aria-label="Ответ голосовым вводом клавиатуры" placeholder="${SR ? "Или продиктуй" : "Продиктуй"} фразу сюда голосовым вводом клавиатуры"></div>`
+    + `<input class="ptext" type="text" lang="zh-CN" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="done" aria-label="Ответ голосовым вводом клавиатуры" placeholder="${SR ? "Или продиктуй" : "Продиктуй"} фразу сюда голосовым вводом клавиатуры">`
+    + `<button class="btn pclr" type="button">Очистить</button></div>`
     + `<p class="pmsg" role="status"></p><div class="presult" hidden><p class="pscore"><b></b> <span></span></p><p class="pheard"></p><ol class="psyl"></ol><div class="phints"></div></div>`;
   const q = s => el.querySelector(s), btn = q(".pmic"), inp = q(".ptext");
   const msg = (t, bad, html) => { const m = q(".pmsg"); m[html ? "innerHTML" : "textContent"] = t; m.className = "pmsg" + (bad ? " bad" : ""); };
+  // The last attempt is the one that counts: a new one (text changed, microphone pressed, «Очистить»)
+  // removes the old result at once, and a check still on its way is dropped.
+  let attempt = 0, checked = null, composing = false;
+  function drop(){
+    attempt++; checked = null; clearTimeout(ansTimer);
+    msg(""); q(".presult").hidden = true;
+    if (opt.onClear) opt.onClear();
+  }
   // alts — recognition variants or typed text; lang — the recognition code, when it came from the microphone button
   async function check(alts, lang){
+    const at = attempt;
     const han = [...new Set(alts.map(hanOf).filter(Boolean))];
     if (!han.length) {
       const raw = alts.join(" ").trim(), script = scriptOf(raw);
       if (!raw) return;
-      if (!lang) { msg("В ответе нет иероглифов. Переключи клавиатуру на китайскую (упрощённую) и продиктуй фразу ещё раз.", true); return; }
       const next = ASR_LANGS[ASR_LANGS.indexOf(lang) + 1];
-      if (next) { setAsrLang(next); msg(`Распознано «${esc(raw)}» — телефон ответил ${script === "cyr" ? "по-русски" : "не по-китайски"} на код ${lang}. Переключил на <b>${next}</b>: нажми микрофон и скажи ещё раз.`, true, true); }
+      if (script === "cyr") { if (lang) setAsrLang(next || ASR_LANGS[0]); msg(lang ? `Распознано «${raw}». ${RU_ASR}` : RU_ASR, true); return; }
+      if (!lang) { msg("В ответе нет иероглифов. Переключи клавиатуру на китайскую (упрощённую) и продиктуй фразу ещё раз.", true); return; }
+      if (next) { setAsrLang(next); msg(`Распознано «${esc(raw)}» — телефон ответил не по-китайски на код ${lang}. Переключил на <b>${next}</b>: нажми микрофон и скажи ещё раз.`, true, true); }
       else { setAsrLang(ASR_LANGS[0]); msg(`Распознано «${esc(raw)}» (${lang}). ` + wrongLangHelp(script), true, true); }
       return;
     }
     if (lang && lang !== ASR_LANGS[0]) setAsrLang(lang); // this code works here — keep it
     let lib;
-    try { lib = await loadPinyin(); } catch (e) { if (live()) msg("Не удалось загрузить словарь пиньиня. Проверь интернет и попробуй ещё раз.", true); return; }
-    if (!live()) return;
+    try { lib = await loadPinyin(); } catch (e) { if (live() && at === attempt) msg("Не удалось загрузить словарь пиньиня. Проверь интернет и попробуй ещё раз.", true); return; }
+    if (!live() || at !== attempt) return;
     const res = han.map(h => pronCompare(ph.k, h, lib)).sort((x, y) => y.score - x.score)[0];
     const pct = Math.round(res.score * 100), all = res.syl.every(o => o.st === "ok");
     // pinyin as written in the lesson, when it splits into one syllable per character
@@ -1416,26 +1458,41 @@ function answerBox(el, ph, opt = {}){
     if (ansRec) { try { ansRec.stop(); } catch (e) {} return; }
     if (!SR) return;
     cancelSay();
+    drop(); inp.value = "";
+    const at = attempt, mine = () => live() && at === attempt;
     const lang = asrLang, rec = ansRec = recognizer(5, lang);
     let got = false;
     btn.classList.add("on"); msg(`Слушаю… Язык распознавания: ${lang}.`);
-    rec.onresult = e => { got = true; if (live()) check([...e.results[0]].map(a => a.transcript || ""), lang); };
-    rec.onerror = e => { if (e.error !== "aborted" && live()) { got = true; msg(micError(e), true); } };
+    rec.onresult = e => { got = true; if (mine()) check([...e.results[0]].map(a => a.transcript || ""), lang); };
+    rec.onerror = e => { if (e.error !== "aborted" && mine()) { got = true; msg(micError(e), true); } };
     rec.onend = () => {
       clearTimeout(guard); btn.classList.remove("on");
       if (ansRec === rec) ansRec = null;
-      if (!got && live()) msg("Ничего не услышал — проверь интернет и микрофон и попробуй ещё раз.", true);
+      if (!got && mine()) msg("Ничего не услышал — проверь интернет и микрофон и попробуй ещё раз.", true);
     };
     // some browsers never end the session without network: give up after 15 s
     const guard = setTimeout(() => { try { rec.abort(); } catch (e) {} }, 15000);
     try { rec.start(); } catch (e) { clearTimeout(guard); ansRec = null; btn.classList.remove("on"); msg(quiet ? "" : micError(e), !quiet); }
   }
   btn.onclick = () => listen();
-  // keyboard dictation fills the field by itself: check on Enter or when the text stops changing
-  const typed = () => { clearTimeout(ansTimer); const t = inp.value.trim(); if (t) check([t]); };
+  // Keyboard dictation fills the field by itself, and on phones the whole of it is one "composition":
+  // check when the text stops changing, on Enter and on leaving the field. Latin letters are pinyin
+  // still being typed — wait for the characters.
+  const typed = () => { clearTimeout(ansTimer); if (!live()) return; const t = inp.value.trim(); if (!t || t === checked) return; checked = t; check([t]); };
+  const plan = () => {
+    clearTimeout(ansTimer);
+    const v = inp.value;
+    if (["han", "cyr"].includes(scriptOf(v)) && !/[A-Za-z]/.test(v)) ansTimer = setTimeout(typed, composing ? 2500 : 1200);
+  };
+  inp.addEventListener("compositionstart", () => { composing = true; });
+  inp.addEventListener("compositionend", () => { composing = false; plan(); });
   inp.addEventListener("keydown", e => { if (e.key === "Enter" && !e.isComposing) { e.preventDefault(); typed(); } });
-  inp.addEventListener("input", e => { clearTimeout(ansTimer); if (!e.isComposing && hanOf(inp.value)) ansTimer = setTimeout(typed, 1500); });
-  return { listen, check, reset(){ q(".presult").hidden = true; inp.value = ""; msg(""); }, focus(){ inp.focus(); } };
+  inp.addEventListener("input", () => { drop(); plan(); });
+  // a moment later, so that a tap on a button below is not lost to the result appearing above it
+  inp.addEventListener("blur", () => { if (inp.value.trim() && inp.value.trim() !== checked) { clearTimeout(ansTimer); ansTimer = setTimeout(typed, 300); } });
+  const reset = () => { if (ansRec) { const r = ansRec; ansRec = null; try { r.abort(); } catch (e) {} } drop(); inp.value = ""; };
+  q(".pclr").onclick = () => { reset(); inp.focus(); };
+  return { listen, check, reset, focus(){ inp.focus(); } };
 }
 
 // ---- the screen
@@ -1522,7 +1579,7 @@ function renderPatterns(){
 function rolePlay(sec, d, me){
   speechStop();
   const lis = [...sec.querySelectorAll(".dlines li")], box = sec.querySelector(".drole"), roleBtn = sec.querySelector(".role");
-  let i = -1, alive = true, okN = 0, myN = 0;
+  let i = -1, alive = true, okN = 0, myN = 0, lineOk = false;
   const mark = () => lis.forEach((li, k) => li.classList.toggle("cur", k === i));
   const stop = () => {
     if (!alive) return;
@@ -1533,6 +1590,8 @@ function rolePlay(sec, d, me){
   const next = () => {
     if (!alive) return;
     answerStop(); i++; mark();
+    if (lineOk) okN++;
+    lineOk = false;
     if (i >= d.l.length) {
       box.innerHTML = `<p class="pmsg good">Диалог пройден. Твоих реплик без ошибок: ${okN} из ${myN}.</p><div class="actions"><button class="btn again" type="button">Ещё раз</button><button class="btn primary fin" type="button">Готово</button></div>`;
       box.querySelector(".again").onclick = () => { stop(); rolePlay(sec, d, me); };
@@ -1545,13 +1604,13 @@ function rolePlay(sec, d, me){
       sayThen(z, () => setTimeout(next, 350));
       return;
     }
-    myN++; let counted = false;
+    myN++;
     box.innerHTML = `<p class="pmsg">Твоя реплика (${esc(me)}): прочитай её вслух.</p><div class="abox"></div><div class="actions"><button class="btn go" type="button">Пропустить</button></div>`;
     const go = box.querySelector(".go"); go.onclick = next;
     const ab = answerBox(box.querySelector(".abox"), { z, p, k: hanOf(z) }, { label: "Сказать реплику", onResult: res => {
-      if (res.all && !counted) { counted = true; okN++; }
+      lineOk = res.all; // the last attempt counts
       go.textContent = "Дальше"; go.classList.toggle("primary", res.all);
-    } });
+    }, onClear: () => { lineOk = false; go.classList.remove("primary"); } });
     // after the partner's line the microphone opens by itself
     if (i > 0) ab.listen(true);
     box.scrollIntoView({ block: "nearest" });
@@ -1726,6 +1785,7 @@ $("madd").onclick = async () => {
   mMsg(`Добавлено реплик: ${lines.length}. Проверь пиньинь: он расставлен автоматически, по слогам.`, "good");
   renderMine();
 };
+$("mclear").onclick = () => { $("mtext").value = ""; $("mtitle").value = ""; mMsg(""); $("mtext").focus(); };
 $("mexport").onclick = async () => {
   let all;
   try { all = await mineAll(); } catch (e) { mMsg("Хранилище недоступно.", "bad"); return; }
@@ -1836,7 +1896,7 @@ function renderReview(){
     return;
   }
   const ph = R.list[R.i], prev = srs[ph.k];
-  let graded = false;
+  let graded = null, gaveUp = false;
   box.innerHTML = `<section class="card pcard"><div class="phead"><div class="pnav"><span>Повторение · ${R.i + 1} из ${R.list.length}</span></div><button class="chip close" type="button">Закончить</button></div>`
     + `<div class="revq">${esc(ph.r || "Прочитай фразу вслух")}</div>`
     + `<div class="revans"${ph.r ? " hidden" : ""}><div class="pline"><div class="pz" lang="zh-CN">${esc(ph.z)}</div><button class="speak" type="button" aria-label="Послушать фразу">${ICON}</button></div><div class="ppy">${esc(ph.p)}</div></div>`
@@ -1845,18 +1905,21 @@ function renderReview(){
   const q = s => box.querySelector(s);
   const grade = ok => {
     const n = srsGrade(ph.k, ok, prev);
-    if (ok && !graded.ok) R.ok++;
+    R.ok += (ok ? 1 : 0) - (graded && graded.ok ? 1 : 0);
     graded = { ok };
     q(".revans").hidden = false; q(".show").hidden = true; q(".nxt").hidden = false; q(".over").hidden = ok;
-    q(".verdict").textContent = ok ? `Верно. Фраза вернётся ${days(n)}.` : "Фраза вернётся завтра.";
+    q(".verdict").textContent = ok ? `Верно. Фраза вернётся ${days(n)}.` : gaveUp ? "Ответ показан — фраза вернётся завтра." : "Не совпало — разбор выше. Фраза вернётся завтра.";
     q(".verdict").className = "pmsg verdict" + (ok ? " good" : "");
   };
   q(".close").onclick = close;
   q(".speak").onclick = () => say(ph.z);
-  q(".show").onclick = () => grade(false);
-  q(".over").onclick = () => grade(true);
+  q(".show").onclick = () => { gaveUp = true; grade(false); };
+  q(".over").onclick = () => { gaveUp = false; grade(true); };
   q(".nxt").onclick = () => { speechStop(); R.i++; renderReview(); };
-  answerBox(q(".abox"), ph, { label: ph.r ? "Сказать по-китайски" : "Сказать фразу", onResult: res => { if (!graded) grade(res.all); } });
+  // every attempt is graded anew, the last one counts; after «Не помню» attempts are practice only
+  answerBox(q(".abox"), ph, { label: ph.r ? "Сказать по-китайски" : "Сказать фразу",
+    onResult: res => { if (!gaveUp) grade(res.all); },
+    onClear: () => { if (graded && !gaveUp) q(".verdict").textContent = ""; } });
 }
 
 document.querySelectorAll("#bnav button").forEach(b => b.onclick = () => { if (section === b.dataset.s) return; section = b.dataset.s; update(); window.scrollTo({ top: 0 }); });
