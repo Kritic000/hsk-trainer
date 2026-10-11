@@ -11,7 +11,7 @@
 // voice — data/voice-*.json and voice-*.mp3 (phrases read by a neural voice, made by tools/voice.py): its own cache.
 // VOICE_VERSION — when voice files change
 // (each together with the same number in DATA_CACHE / SENT_CACHE / SPEECH_CACHE / VOICE_CACHE in index.html).
-const SHELL_VERSION = 14;
+const SHELL_VERSION = 15;
 const DATA_VERSION = 2;
 const SENT_VERSION = 2;
 const SPEECH_VERSION = 3;
