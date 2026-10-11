@@ -107,9 +107,32 @@ python tools/audio-gain.py --write  # записать
 
 После записи поднимите `DATA_VERSION` в `sw.js` и `DATA_CACHE` в `index.html`.
 
+## Озвучка фраз нейросетевым голосом
+
+`data/voice-N.json` и `data/voice-N-УУ.mp3` — диалоги, опорные фразы, слова и примеры предложений уровня,
+прочитанные моделью Kokoro-82M-v1.1-zh (голос `zf_017`, скорость 0,9). Указатель `voice-N.json` хранит для
+каждого текста урок, смещение и длину в файле урока; файл урока — mp3 всех его фраз подряд (моно, 24 кГц,
+32 кбит/с). Текст попадает в файл первого урока, где он встретился. Всё, чего в указателе нет, читает
+синтез речи телефона.
+
+```
+pip install torch kokoro "misaki[zh]" soundfile numpy imageio-ffmpeg   # один раз; с видеокартой быстрее
+python tools/voice.py 1 --check   # сверить чтение модели с пиньинем из данных
+python tools/voice.py 1           # озвучить новые тексты и пересобрать файлы уровня
+```
+
+Запускать после изменения `data/speech-N.json`, `data/sentences-N.json` или слов уровня. `--check` печатает
+фразы, где тоны модели расходятся с пиньинем данных; расхождения в нейтральном тоне (后面, 这里, 哪个)
+допустимы. Если модель читает знак неверно, впишите в `voice-fixes.json` тот же текст в написании,
+которое она читает правильно (например, с пробелом между словами). Готовые wav лежат в `.cache/voice`.
+После пересборки поднимите `VOICE_VERSION` в `sw.js` и `VOICE_CACHE` в `index.html`. Новый уровень —
+добавить его номер в `VOICE_IDS` в `index.html`.
+
 ## Источники и лицензии
 
 - Предложения: [Tatoeba](https://tatoeba.org), CC-BY 2.0 FR (у каждого примера в приложении ссылка
   на оригинал).
 - Словарь HSK: [drkameleon/complete-hsk-vocabulary](https://github.com/drkameleon/complete-hsk-vocabulary).
 - Шрифты: Golos Text и Noto Serif SC с Google Fonts, SIL Open Font License.
+- Озвучка фраз: модель [Kokoro-82M-v1.1-zh](https://huggingface.co/hexgrad/Kokoro-82M-v1.1-zh) (hexgrad),
+  голос `zf_017`, лицензия Apache 2.0.

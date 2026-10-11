@@ -6,6 +6,7 @@
 - `sw.js` — service worker: кэш оболочки (`SHELL_VERSION`) и кэш данных (`DATA_VERSION`).
 - `data/*.json` — черты, озвучка и примеры предложений (`sentences-N.json`) по уровням; `lib/` — hanzi-writer; `fonts/` — локальные шрифты; `icons/`, `manifest.json` — PWA.
 - `data/speech-N.json` — свои диалоги и опорные фразы раздела «Речь» по урокам. Не править руками: источник — `tools/speech/hskN.txt`, сборка `npm run speech` (проверяет знаки по урокам и сверяет с `exclude.txt`). Уровень с таким файлом должен быть в `SPEECH_IDS` в `index.html`.
+- `data/voice-N.json`, `data/voice-N-УУ.mp3` — озвучка фраз уровня нейросетевым голосом (Kokoro-82M-v1.1-zh, голос zf_017). Не править руками: сборка `python tools/voice.py N` после изменения диалогов, фраз, слов или примеров уровня. Уровень с такими файлами должен быть в `VOICE_IDS` в `index.html`. Всё, чего нет в указателе, читает синтез речи телефона.
 - `tools/` — сборка примеров предложений и шрифтов (Node.js), см. `tools/README.md`. `data/sentences-*.json` не править руками — только через `tools/sentences/` и `npm run build`. Правила отбора (HSK 1 — по урокам Standard Course 1, HSK 2–6 — слова своего уровня) описаны там же.
 - Прогресс пользователя хранится в localStorage под ключами `hsk-propisi-v2-*` — не менять ключи и формат без миграции. «Мои диалоги» раздела «Речь» — только в IndexedDB (`propisi-speech`) на устройстве: в репозиторий и на сервер не отправлять.
 
@@ -17,6 +18,7 @@
    - Изменились уже опубликованные `data/strokes-*.json` или `data/audio-*.json` → `DATA_VERSION += 1` **и** то же число в `DATA_CACHE` в `index.html` (`"propisi-data-vN"`). Это заставит пользователей заново скачать ~21 МБ — только при реальных изменениях.
    - Изменились опубликованные `data/sentences-*.json` → `SENT_VERSION += 1` **и** то же число в `SENT_CACHE` в `index.html` (`"propisi-sent-vN"`). Новые файлы данных версию не требуют.
    - Изменились опубликованные `data/speech-*.json` → `SPEECH_VERSION += 1` **и** то же число в `SPEECH_CACHE` в `index.html` (`"propisi-speech-vN"`).
+   - Изменились опубликованные `data/voice-*` → `VOICE_VERSION += 1` **и** то же число в `VOICE_CACHE` в `index.html` (`"propisi-voice-vN"`).
    - Менялись данные HSK 1 в `tools/hsk1/items.tsv` → `npm run hsk1` (пишет в `index.html`), значит и `SHELL_VERSION`.
    - Добавил новый файл оболочки — внести его в `SHELL_FILES`.
 2. **Закоммитить** с понятным описанием на русском: что изменилось для пользователя, в повелительном или прошедшем времени, например `Добавлен поиск по ключам` / `Исправлена озвучка слов в HSK 3`.

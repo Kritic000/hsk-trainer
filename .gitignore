@@ -4,3 +4,4 @@ tools/.cache/
 tools/sentences/exclude.txt
 # local only: the textbook's vocabulary by lesson
 tools/sentences/vocab.txt
+__pycache__/
