@@ -11,7 +11,7 @@
 // voice — data/voice-*.json and voice-*.mp3 (phrases read by a neural voice, made by tools/voice.py): its own cache.
 // VOICE_VERSION — when voice files change
 // (each together with the same number in DATA_CACHE / SENT_CACHE / SPEECH_CACHE / VOICE_CACHE in index.html).
-const SHELL_VERSION = 16;
+const SHELL_VERSION = 17;
 const DATA_VERSION = 2;
 const SENT_VERSION = 2;
 const SPEECH_VERSION = 3;
@@ -21,6 +21,8 @@ const DATA = `propisi-data-v${DATA_VERSION}`;
 const SENT = `propisi-sent-v${SENT_VERSION}`;
 const SPEECH = `propisi-speech-v${SPEECH_VERSION}`;
 const VOICE = `propisi-voice-v${VOICE_VERSION}`;
+// the engine and the model of the strict check (≈75 MB), downloaded by lib/sherpa/asr-worker.js: never deleted here
+const ASR = "propisi-asr-v1";
 const isSentences = path => /\/data\/sentences-[^/]+\.json$/.test(path);
 const isSpeech = path => /\/data\/speech-[^/]+\.json$/.test(path);
 const isVoice = path => /\/data\/voice-[^/]+\.(json|mp3)$/.test(path);
@@ -31,6 +33,9 @@ const SHELL_FILES = [
   "manifest.json",
   "lib/hanzi-writer.min.js",
   "lib/pinyin-pro.min.js",
+  "lib/sherpa/asr-worker.js",
+  "lib/sherpa/sherpa-onnx-asr.js",
+  "lib/sherpa/sherpa-onnx-wasm-main-vad-asr.js",
   "fonts/fonts.css",
   "fonts/golos-cyrillic-ext.woff2",
   "fonts/golos-cyrillic.woff2",
@@ -58,7 +63,7 @@ self.addEventListener("install", e => {
 
 self.addEventListener("activate", e => {
   e.waitUntil(caches.keys()
-    .then(keys => Promise.all(keys.filter(k => k.startsWith("propisi-") && ![SHELL, DATA, SENT, SPEECH, VOICE].includes(k)).map(k => caches.delete(k))))
+    .then(keys => Promise.all(keys.filter(k => k.startsWith("propisi-") && ![SHELL, DATA, SENT, SPEECH, VOICE, ASR].includes(k)).map(k => caches.delete(k))))
     // sentences used to live in the data cache: drop those old copies
     .then(() => caches.open(DATA)).then(c => c.keys().then(reqs => Promise.all(reqs.filter(r => isSentences(new URL(r.url).pathname)).map(r => c.delete(r)))))
     .then(() => self.clients.claim()));
