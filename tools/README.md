@@ -130,9 +130,4 @@ python tools/voice.py 1           # озвучить новые тексты и 
 
 ## Источники и лицензии
 
-- Предложения: [Tatoeba](https://tatoeba.org), CC-BY 2.0 FR (у каждого примера в приложении ссылка
-  на оригинал).
-- Словарь HSK: [drkameleon/complete-hsk-vocabulary](https://github.com/drkameleon/complete-hsk-vocabulary).
-- Шрифты: Golos Text и Noto Serif SC с Google Fonts, SIL Open Font License.
-- Озвучка фраз: модель [Kokoro-82M-v1.1-zh](https://huggingface.co/hexgrad/Kokoro-82M-v1.1-zh) (hexgrad),
-  голос `zf_017`, лицензия Apache 2.0.
+Полный список данных, библиотек, шрифтов и моделей с лицензиями — в [CREDITS.md](../CREDITS.md).
