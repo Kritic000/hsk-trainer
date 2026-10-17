@@ -9,7 +9,7 @@
 |---|---|---|---|
 | Черты иероглифов и порядок письма | [hanzi-writer-data](https://github.com/chanind/hanzi-writer-data) — данные проекта [Make Me a Hanzi](https://github.com/skishore/makemeahanzi), извлечённые из шрифтов Arphic PL KaitiM GB и Arphic PL UKai (Arphic Technology) | [Arphic Public License](licenses/ARPHICPL.TXT) | `data/strokes-N.json` |
 | Записи слогов (озвучка отдельного знака) | [davinfifield/mp3-chinese-pinyin-sound](https://github.com/davinfifield/mp3-chinese-pinyin-sound) | Unlicense (общественное достояние) | `data/audio-N.json` |
-| Примеры предложений | [Tatoeba](https://tatoeba.org); у каждого примера в приложении есть ссылка на оригинал | [CC BY 2.0 FR](https://creativecommons.org/licenses/by/2.0/fr/) | `data/sentences-N.json` |
+| Примеры предложений | [Tatoeba](https://tatoeba.org) (tatoeba.org). В приложении над примерами строка «Примеры — Tatoeba, CC BY 2.0 FR», в «Ещё → Источники» — то же со ссылками; номер и ссылка на каждое предложение хранятся в данных и открываются значком ⓘ после его перевода | [CC BY 2.0 FR](https://creativecommons.org/licenses/by/2.0/fr/) | `data/sentences-N.json` |
 | Словарь HSK: уровни слов, по которым отбираются примеры (о словаре внутри приложения — ниже) | [drkameleon/complete-hsk-vocabulary](https://github.com/drkameleon/complete-hsk-vocabulary); сам он собран из списков HSK, CC-CEDICT, Make Me a Hanzi и других источников, перечисленных в его описании | MIT | только при сборке (`tools/`), в приложение не входит |
 | Порядок уроков HSK 1 | оглавление учебника HSK Standard Course 1: какие знаки и какая грамматика в каком уроке | тексты учебника не используются | списки уроков в `index.html` |
 
