@@ -10,8 +10,9 @@
 // SPEECH_VERSION — when speech files change
 // voice — data/voice-*.json and voice-*.mp3 (phrases read by a neural voice, made by tools/voice.py): its own cache.
 // VOICE_VERSION — when voice files change
+// data/hints-*.json (the cards of the characters, small) belong to the shell: SHELL_VERSION when they change
 // (each together with the same number in DATA_CACHE / SENT_CACHE / SPEECH_CACHE / VOICE_CACHE in index.html).
-const SHELL_VERSION = 27;
+const SHELL_VERSION = 28;
 const DATA_VERSION = 2;
 const SENT_VERSION = 2;
 const SPEECH_VERSION = 3;
@@ -26,11 +27,13 @@ const ASR = "propisi-asr-v1";
 const isSentences = path => /\/data\/sentences-[^/]+\.json$/.test(path);
 const isSpeech = path => /\/data\/speech-[^/]+\.json$/.test(path);
 const isVoice = path => /\/data\/voice-[^/]+\.(json|mp3)$/.test(path);
+const isShellData = path => /\/data\/hints-[^/]+\.json$/.test(path);
 
 const SHELL_FILES = [
   "./",
   "index.html",
   "manifest.json",
+  "data/hints-1.json",
   "lib/hanzi-writer.min.js",
   "lib/pinyin-pro.min.js",
   "lib/sherpa/asr-worker.js",
@@ -102,6 +105,6 @@ self.addEventListener("fetch", e => {
   // the recognition test page lives on its own: its own service worker, nothing of it in our caches
   if (url.pathname.includes("/asr-test/")) return;
   if (req.mode === "navigate") return e.respondWith(page(req));
-  const isData = /\/data\/[^/]+\.json$/.test(url.pathname);
+  const isData = /\/data\/[^/]+\.json$/.test(url.pathname) && !isShellData(url.pathname);
   e.respondWith(cacheFirst(req, isVoice(url.pathname) ? VOICE : isSentences(url.pathname) ? SENT : isSpeech(url.pathname) ? SPEECH : isData ? DATA : SHELL));
 });

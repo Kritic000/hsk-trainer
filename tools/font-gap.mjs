@@ -1,4 +1,4 @@
-// `npm run font-gap`: CJK characters of index.html and data/sentences-*.json that the self-hosted
+// `npm run font-gap`: CJK characters of index.html, data/sentences-*.json and data/hints-*.json that the self-hosted
 // Noto Serif SC subset (fonts/fonts.css) doesn't cover. If any — run `npm run fonts`.
 import fs from "node:fs";
 import path from "node:path";
@@ -11,7 +11,7 @@ for (const [, ranges] of css.matchAll(/font-family:'Noto Serif SC'[^}]*unicode-r
     const [a, b] = r.trim().replace(/^U\+/i, "").split("-").map(x => parseInt(x, 16));
     for (let cp = a; cp <= (b || a); cp++) covered.add(cp);
   }
-const files = ["index.html", ...[1, 2, 3, 4, 5, 6].map(l => path.join("data", `sentences-${l}.json`))];
+const files = ["index.html", ...[1, 2, 3, 4, 5, 6].flatMap(l => [`sentences-${l}.json`, `hints-${l}.json`].map(n => path.join("data", n)))];
 const gap = new Set();
 for (const f of files) {
   const p = path.join(ROOT, f);
