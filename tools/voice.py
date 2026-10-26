@@ -1,4 +1,4 @@
-"""Нейросетевая озвучка фраз: диалоги, опорные фразы, слова и примеры предложений уровня.
+"""Нейросетевая озвучка фраз: диалоги, опорные фразы, слова, примеры предложений и слова «Тонов» уровня.
 
 Модель Kokoro-82M-v1.1-zh (Apache 2.0, https://huggingface.co/hexgrad/Kokoro-82M-v1.1-zh), голос VOICE.
 Пишет data/voice-N.json (указатель: текст → [урок, смещение, длина]) и data/voice-N-УУ.mp3
@@ -64,6 +64,17 @@ def collect(level):
         for c in grp["items"]:
             for s in sents.get(c, []):
                 add(g, s["z"], s.get("p"))
+    # «Тоны»: the words of the table and the groups of «Пары» — in the file of their lesson, words of HSK 2 in the last one
+    tones = ROOT / "data" / f"tones-{level}.json"
+    if tones.exists():
+        t = json.loads(tones.read_text(encoding="utf-8"))
+        last = len(groups) - 1
+        for w in t["w"]:
+            add(w["l"] - 1 if w["l"] else last, w["z"], w["p"])
+        for grp in t["p"]:
+            for z, py, _, l, *rec in grp:
+                if not rec:  # single syllables are played from the recordings of syllables
+                    add(l - 1 if l else last, z, py)
     return out, syl
 
 

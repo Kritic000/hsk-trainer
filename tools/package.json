@@ -11,6 +11,7 @@
     "hsk1": "node hsk1.mjs",
     "speech": "node speech.mjs",
     "hints": "node hints.mjs",
+    "tones": "node tones.mjs",
     "fonts": "node build-fonts.mjs",
     "font-gap": "node font-gap.mjs"
   },

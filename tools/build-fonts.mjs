@@ -1,5 +1,5 @@
 // `npm run fonts`: downloads Golos Text (all subsets) and a Noto Serif SC subset containing every
-// CJK character of index.html, data/sentences-*.json and data/hints-*.json, writes fonts/*.woff2 and fonts/fonts.css.
+// CJK character of index.html, data/sentences-*.json and data/hints-*.json, data/tones-*.json, writes fonts/*.woff2 and fonts/fonts.css.
 // After it: check the file list in sw.js (SHELL_FILES) and bump SHELL_VERSION.
 import fs from "node:fs";
 import path from "node:path";
@@ -36,7 +36,7 @@ const range = (a, b) => Array.from({ length: b - a + 1 }, (_, i) => String.fromC
 // …plus CJK characters that occur only in the example sentences (so far just Chinese punctuation),
 // kept in this last file so the big character files don't change
 const inSentences = new Set();
-for (const f of [1, 2, 3, 4, 5, 6].flatMap(l => [`sentences-${l}.json`, `hints-${l}.json`]).map(n => path.join(root, "data", n))) {
+for (const f of [1, 2, 3, 4, 5, 6].flatMap(l => [`sentences-${l}.json`, `hints-${l}.json`, `tones-${l}.json`]).map(n => path.join(root, "data", n))) {
   if (fs.existsSync(f)) [...fs.readFileSync(f, "utf8")].forEach(ch => { if (ch.codePointAt(0) >= 0x2E80 && !chars.includes(ch)) inSentences.add(ch); });
 }
 const western = [...range(0x20, 0x7E), ...range(0xA0, 0xFF), ..."āáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜĀÁǍÀĒÉĚÈĪÍǏÌŌÓǑÒŪÚǓÙ", ...range(0x400, 0x45F), ..."—–«»…“”‘’·№", ...inSentences].join("");
