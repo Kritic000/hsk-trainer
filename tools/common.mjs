@@ -98,15 +98,20 @@ export function segmenter(lex){
 // ---- the rule every example sentence must pass. Returns null if fine, otherwise the reason.
 //  HSK 1: only characters from lessons 1…N of the character's lesson.
 //  HSK 2–6: every word from HSK of the character's level or lower (see buildLex).
+//  free — a line allowed by hand («~» in composed/): any characters of HSK 1, exclude.txt is not consulted.
 export function checker(lex){
   const seg = segmenter(lex), exclude = loadExclude();
-  return (c, z) => {
+  return (c, z, free = false) => {
     const han = [...z].filter(isHan);
     if (!z.includes(c)) return "no char";
     if (han.length > 12) return `${han.length} han`;
     if (![...z].every(ch => isHan(ch) || PUNCT.includes(ch))) return "non-Chinese symbols";
-    if (exclude.has(han.join(""))) return "in exclude.txt";
+    if (!free && exclude.has(han.join(""))) return "in exclude.txt";
     const lv = charLv[c];
+    if (lv === 1 && free) {
+      const out = [...new Set(han.filter(ch => charLv[ch] !== 1))];
+      return out.length ? `${out.join("")} not HSK 1` : null;
+    }
     if (lv === 1) {
       const n = lessonOf[c], ok = lessonChars[n], out = [...new Set(han.filter(ch => !ok.has(ch)))];
       return out.length ? `HSK 1 lesson ${n}: ${out.join("")} not yet taught` : null;

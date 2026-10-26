@@ -11,9 +11,10 @@ const hsk = loadHsk();
 const check = checker(lex);
 
 const tr = Object.fromEntries(readTsv(TRANSLATIONS).map(([id, r]) => [id, r]));
-// "!好" in composed/ pins the sentence first (to show a meaning Tatoeba lacks); at most 3 per character
+// "!好" in composed/ pins the sentence first (to show a meaning Tatoeba lacks); at most 3 per character.
+// "~好" — allowed by hand: HSK 1 characters of any lesson, even a line of exclude.txt (a plain greeting like 你好)
 const co = {}, pinned = {};
-for (const [c0, z, r] of readTsv(COMPOSED)) { const c = c0.replace(/^!/, ""); ((c0.startsWith("!") ? pinned : co)[c] ||= []).push({ z: normZh(z), r }); }
+for (const [c0, z, r] of readTsv(COMPOSED)) { const c = c0.replace(/^[!~]+/, ""); ((c0.startsWith("!") ? pinned : co)[c] ||= []).push({ z: normZh(z), r, free: c0.includes("~") }); }
 
 const toPinyin = makePinyin(hsk, lex);
 // HSK 1 lessons 1–2 have only ~20 characters: better no example than an artificial one
@@ -39,7 +40,7 @@ for (const c in chars) {
   let pinAt = 0;
   for (const s of [...pins, ...(co[c] || [])]) {
     if (list.length >= 3) break;
-    const bad = check(c, s.z) || (list.some(x => x.z === s.z) ? "duplicate" : null);
+    const bad = check(c, s.z, s.free) || (list.some(x => x.z === s.z) ? "duplicate" : null);
     if (bad) { problems.push(`${c} (${lv === 1 ? lessonName(lessonOf[c]) : "HSK " + lv}): ${s.z} — ${bad}`); if (bad !== "duplicate") rejected.add(`${c}\t${s.z}`); continue; }
     const item = { z: s.z, p: toPinyin(s.z), r: tidyRu(s.r), o: 1 };
     if (pins.includes(s)) list.splice(pinAt++, 0, item); else list.push(item);
@@ -69,7 +70,7 @@ chunk(compose, "compose");
 if (process.argv.includes("--prune") && rejected.size) {
   for (const f of fs.readdirSync(COMPOSED).filter(f => f.endsWith(".tsv"))) {
     const file = path.join(COMPOSED, f), lines = fs.readFileSync(file, "utf8").split(/\r?\n/);
-    const keep = lines.filter(l => { const [c0, z] = l.split("\t"); return !(z && rejected.has(`${c0.replace(/^!/, "").trim()}\t${normZh(z)}`)); });
+    const keep = lines.filter(l => { const [c0, z] = l.split("\t"); return !(z && rejected.has(`${c0.replace(/^[!~]+/, "").trim()}\t${normZh(z)}`)); });
     if (keep.length !== lines.length) fs.writeFileSync(file, keep.join("\n"));
   }
   console.log(`pruned ${rejected.size} rejected composed lines`);

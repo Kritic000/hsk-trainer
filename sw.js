@@ -12,11 +12,11 @@
 // VOICE_VERSION — when voice files change
 // data/hints-*.json (the cards of the characters, small) belong to the shell: SHELL_VERSION when they change
 // (each together with the same number in DATA_CACHE / SENT_CACHE / SPEECH_CACHE / VOICE_CACHE in index.html).
-const SHELL_VERSION = 30;
+const SHELL_VERSION = 31;
 const DATA_VERSION = 2;
-const SENT_VERSION = 2;
+const SENT_VERSION = 3;
 const SPEECH_VERSION = 3;
-const VOICE_VERSION = 1;
+const VOICE_VERSION = 2;
 const SHELL = `propisi-shell-v${SHELL_VERSION}`;
 const DATA = `propisi-data-v${DATA_VERSION}`;
 const SENT = `propisi-sent-v${SENT_VERSION}`;
