@@ -1,6 +1,7 @@
 // `npm run hints`: hints/hsk1.tsv → data/hints-1.json — what a character of HSK 1 is made of and how to
 // remember it (the card under the square in «Знаки» and after an answer in «Узнай знак»).
 // Checks: every character of HSK 1 has exactly one line, the kind is known, the text is there.
+// Also hints/similar.txt → "s": groups of characters easy to confuse, with what tells each one apart.
 import fs from "node:fs";
 import path from "node:path";
 import { ROOT, TOOLS, META } from "./common.mjs";
@@ -32,8 +33,31 @@ fs.readFileSync(src, "utf8").split(/\r?\n/).forEach((line, i) => {
   out[c] = e;
 });
 want.filter(c => !out[c]).forEach(c => errors.push(`нет строки для ${c}`));
+
+// similar characters: hints/similar.txt — groups of lines «character ⇥ how it differs», a blank line between groups
+const groups = [];
+let cur = [];
+const flush = at => {
+  if (!cur.length) return;
+  const cs = cur.map(x => x[0]).join("");
+  if (cur.length < 2 || cur.length > 4) errors.push(`similar.txt, ${at}: в группе ${cs} ${cur.length} знак(а), нужно 2–4`);
+  if (new Set(cur.map(x => x[0])).size !== cur.length) errors.push(`similar.txt, ${at}: знак повторяется в группе ${cs}`);
+  groups.push(cur); cur = [];
+};
+fs.readFileSync(path.join(TOOLS, "hints", "similar.txt"), "utf8").split(/\r?\n/).forEach((line, i) => {
+  if (line.startsWith("#")) return;
+  if (!line.trim()) return flush(`строка ${i + 1}`);
+  const [c, note = ""] = line.split("\t").map(x => x.trim());
+  if (!META.items[c]) errors.push(`similar.txt, строка ${i + 1}: ${c} — нет в словаре приложения`);
+  if (!note) errors.push(`similar.txt, строка ${i + 1}: ${c} — нет пояснения`);
+  cur.push([c, note]);
+});
+flush("конец файла");
+const sig = new Set();
+groups.forEach(g => { const k = g.map(x => x[0]).sort().join(""); if (sig.has(k)) errors.push(`similar.txt: группа ${k} повторяется`); sig.add(k); });
+
 if (errors.length) { console.error(errors.join("\n")); process.exit(1); }
-const json = "{\"c\":{\n" + want.map(c => JSON.stringify(c) + ":" + JSON.stringify(out[c])).join(",\n") + "\n}}\n";
+const json = "{\"c\":{\n" + want.map(c => JSON.stringify(c) + ":" + JSON.stringify(out[c])).join(",\n") + "\n},\n\"s\":[\n" + groups.map(g => JSON.stringify(g)).join(",\n") + "\n]}\n";
 fs.writeFileSync(path.join(ROOT, "data", "hints-1.json"), json);
 const n = k => want.filter(c => out[c].k === k).length;
-console.log(`data/hints-1.json: ${want.length} знаков — происхождение ${n("o")}, смысл + звук ${n("z")}, подсказка ${n("p")}`);
+console.log(`data/hints-1.json: ${want.length} знаков — происхождение ${n("o")}, смысл + звук ${n("z")}, подсказка ${n("p")}; похожих групп ${groups.length}`);
