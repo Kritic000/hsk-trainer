@@ -12,7 +12,7 @@
 // VOICE_VERSION — when voice files change
 // data/hints-*.json (the cards of the characters, small) belong to the shell: SHELL_VERSION when they change
 // (each together with the same number in DATA_CACHE / SENT_CACHE / SPEECH_CACHE / VOICE_CACHE in index.html).
-const SHELL_VERSION = 29;
+const SHELL_VERSION = 30;
 const DATA_VERSION = 2;
 const SENT_VERSION = 2;
 const SPEECH_VERSION = 3;
